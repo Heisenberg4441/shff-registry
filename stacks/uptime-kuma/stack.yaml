@@ -1,0 +1,52 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: uptime-kuma
+name: uptime-kuma
+version: 1.0.0
+category: сеть
+summary: Мониторинг своих же сервисов. Пишет в телеграм, когда что-то упало.
+meta: '// 320 MB · 1 контейнер'
+homepage: https://github.com/louislam/uptime-kuma
+
+primary: uptime-kuma
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 3001
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: status
+
+volumes:
+  - path: data/kuma
+
+compose:
+  services:
+    uptime-kuma:
+      image: louislam/uptime-kuma:1.23.16
+      restart: unless-stopped
+      ports:
+        - '${PORT}:3001'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/kuma:/app/data
+      environment:
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Соседние стеки видны по именам сервисов внутри сети ${DOCK_NETWORK}:
+    в мониторе достаточно указать http://grafana:3000, без портов хоста.

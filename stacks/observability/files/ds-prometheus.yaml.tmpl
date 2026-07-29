@@ -1,0 +1,14 @@
+# Датасорс подкладывается файлом до первого старта grafana — поэтому пустого
+# списка источников не бывает, а дашборд находит данные сразу.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: dock-prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: ${SCRAPE_INTERVAL}

@@ -1,0 +1,71 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: vaultwarden
+name: vaultwarden
+version: 1.0.0
+category: данные
+summary: Менеджер паролей, совместимый с клиентами bitwarden. Регистрация закрыта, админ-токен генерируется при установке.
+meta: '// 120 MB · 1 контейнер'
+homepage: https://github.com/dani-garcia/vaultwarden
+
+description: |
+  Ставится закрытым: регистрация выключена, админ-панель под токеном, который
+  генерируется здесь же и больше нигде не хранится в открытом виде.
+
+primary: vaultwarden
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8222
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: vault
+
+  - key: ADMIN_TOKEN
+    label: Токен админ-панели
+    type: secret
+    generate: base64
+    hint: '// открывает /admin — оставь пустым, сгенерирую'
+
+  - key: SIGNUPS_ALLOWED
+    label: Разрешить самостоятельную регистрацию
+    type: bool
+    default: false
+
+volumes:
+  - path: data/vaultwarden
+
+compose:
+  services:
+    vaultwarden:
+      image: vaultwarden/server:1.32.7-alpine
+      restart: unless-stopped
+      ports:
+        - '${PORT}:80'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/vaultwarden:/data
+      environment:
+        DOMAIN: https://${DOMAIN}.${DOCK_DOMAIN}
+        SIGNUPS_ALLOWED: '${SIGNUPS_ALLOWED}'
+        ADMIN_TOKEN: ${ADMIN_TOKEN}
+        WEBSOCKET_ENABLED: 'true'
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Админ-панель: http://${DOCK_HOSTNAME}:${PORT}/admin
+    Токен: ${ADMIN_TOKEN}

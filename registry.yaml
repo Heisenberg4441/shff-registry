@@ -1,0 +1,68 @@
+# Индекс реестра готовых стеков.
+#
+# Панель читает этот файл первым и по нему знает, что вообще есть в каталоге.
+# Обязательны у записи только id и path — id обязан совпадать с id в манифесте
+# стека, path указывает на каталог со stack.yaml относительно корня репозитория.
+# Остальные поля попадают на карточку в каталоге.
+
+apiVersion: dock/v1
+kind: Registry
+name: SHFF stacks
+updated: 2026-07-29
+
+stacks:
+  - id: observability
+    name: grafana + prometheus + loki
+    version: 1.0.0
+    category: мониторинг
+    summary: 'Наблюдаемость из коробки. Grafana приезжает с уже прописанными датасорсами и дашбордом по хосту — открыл и смотришь.'
+    meta: '// 480 MB · 5 контейнеров'
+    path: stacks/observability
+
+  - id: vaultwarden
+    name: vaultwarden
+    version: 1.0.0
+    category: данные
+    summary: 'Менеджер паролей, совместимый с клиентами bitwarden. Регистрация закрыта, админ-токен генерируется при установке.'
+    meta: '// 120 MB · 1 контейнер'
+    path: stacks/vaultwarden
+
+  - id: gitea
+    name: gitea
+    version: 1.0.0
+    category: код
+    summary: 'Лёгкий git-хостинг: репозитории, issues, actions. Живёт в одном контейнере с sqlite.'
+    meta: '// 180 MB · 1 контейнер'
+    path: stacks/gitea
+
+  - id: uptime-kuma
+    name: uptime-kuma
+    version: 1.0.0
+    category: сеть
+    summary: 'Мониторинг своих же сервисов. Пишет в телеграм, когда что-то упало.'
+    meta: '// 320 MB · 1 контейнер'
+    path: stacks/uptime-kuma
+
+  - id: navidrome
+    name: navidrome
+    version: 1.0.0
+    category: медиа
+    summary: Стриминг своей музыкальной коллекции. Совместим с subsonic-клиентами.
+    meta: '// 60 MB · 1 контейнер'
+    path: stacks/navidrome
+
+  - id: adguard
+    name: adguard-home
+    version: 1.0.0
+    category: сеть
+    summary: DNS-фильтр на весь дом. Режет рекламу и трекеры до того, как они загрузятся.
+    meta: '// 90 MB · 1 контейнер'
+    path: stacks/adguard
+
+  - id: paperless
+    name: paperless-ngx
+    version: 1.0.0
+    category: данные
+    summary: Архив бумажных документов с OCR и поиском по тексту. Приезжает с postgres и redis, русский и английский OCR включены.
+    meta: '// 900 MB · 4 контейнера'
+    path: stacks/paperless

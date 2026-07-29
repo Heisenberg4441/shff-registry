@@ -1,0 +1,96 @@
+# Значения ${...} подставляет docker compose из .env, который dock кладёт рядом.
+# Файл можно поднять руками: cd /home/dock/stacks/observability && docker compose up -d
+
+services:
+  grafana:
+    image: grafana/grafana:11.3.1
+    restart: unless-stopped
+    ports:
+      - "${PORT}:3000"
+    volumes:
+      - ${DOCK_STACK_DIR}/data/grafana:/var/lib/grafana
+      - ${DOCK_STACK_DIR}/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ${DOCK_STACK_DIR}/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      GF_SECURITY_ADMIN_USER: ${ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_SERVER_ROOT_URL: http://${DOMAIN}.${DOCK_DOMAIN}/
+      TZ: ${DOCK_TZ}
+    depends_on:
+      - prometheus
+    labels:
+      dock.stack: ${DOCK_STACK_ID}
+      dock.role: primary
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+    volumes:
+      - ${DOCK_STACK_DIR}/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ${DOCK_STACK_DIR}/data/prometheus:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${RETENTION}
+      - --web.enable-lifecycle
+    environment:
+      TZ: ${DOCK_TZ}
+    labels:
+      dock.stack: ${DOCK_STACK_ID}
+
+  # Метрики железа: cpu, память, диски, сеть. Читает хостовые /proc и /sys,
+  # поэтому цифры про машину, а не про контейнер.
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:v1.8.2
+    restart: unless-stopped
+    pid: host
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --path.rootfs=/rootfs
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|rootfs/var/lib/docker)($$|/)
+    labels:
+      dock.stack: ${DOCK_STACK_ID}
+
+  loki:
+    image: grafana/loki:3.2.1
+    profiles: [loki]
+    restart: unless-stopped
+    volumes:
+      - ${DOCK_STACK_DIR}/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - ${DOCK_STACK_DIR}/data/loki:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    environment:
+      TZ: ${DOCK_TZ}
+    labels:
+      dock.stack: ${DOCK_STACK_ID}
+
+  promtail:
+    image: grafana/promtail:3.2.1
+    profiles: [loki]
+    restart: unless-stopped
+    volumes:
+      - ${DOCK_STACK_DIR}/promtail/promtail-config.yaml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    labels:
+      dock.stack: ${DOCK_STACK_ID}
+
+# Общая сеть панели: по ней стеки видят друг друга по именам сервисов,
+# а reverse proxy видит их все.
+networks:
+  default:
+    name: ${DOCK_NETWORK}
+    external: true

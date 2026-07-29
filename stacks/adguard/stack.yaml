@@ -1,0 +1,68 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: adguard
+name: adguard-home
+version: 1.0.0
+category: сеть
+summary: DNS-фильтр на весь дом. Режет рекламу и трекеры до того, как они загрузятся.
+meta: '// 90 MB · 1 контейнер'
+homepage: https://adguard.com/adguard-home.html
+
+description: |
+  Занимает 53-й порт на хосте. Если там уже сидит systemd-resolved, его надо
+  сначала подвинуть: DNSStubListener=no в /etc/systemd/resolved.conf.
+
+primary: adguard
+
+inputs:
+  - key: WEB_PORT
+    label: Порт веб-морды
+    type: port
+    default: 3080
+    hostPort: true
+    required: true
+
+  - key: DNS_PORT
+    label: Порт DNS
+    type: port
+    default: 53
+    hostPort: true
+    required: true
+    hint: '// на нём обычно уже сидит systemd-resolved'
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: dns
+
+volumes:
+  - path: data/adguard/work
+  - path: data/adguard/conf
+
+compose:
+  services:
+    adguard:
+      image: adguard/adguardhome:v0.107.55
+      restart: unless-stopped
+      ports:
+        - '${WEB_PORT}:3000'
+        - '${DNS_PORT}:53/tcp'
+        - '${DNS_PORT}:53/udp'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/adguard/work:/opt/adguardhome/work
+        - ${DOCK_STACK_DIR}/data/adguard/conf:/opt/adguardhome/conf
+      environment:
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${WEB_PORT}'
+  notes: |
+    Мастер первичной настройки живёт на порту ${WEB_PORT}. После него
+    роутеру нужно раздать адрес этого хоста как DNS.

@@ -1,0 +1,128 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: paperless
+name: paperless-ngx
+version: 1.0.0
+category: данные
+summary: Архив бумажных документов с OCR и поиском по тексту. Приезжает с postgres и redis, русский и английский OCR включены.
+meta: '// 900 MB · 3 контейнера'
+homepage: https://docs.paperless-ngx.com
+
+description: |
+  Пример стека, где сервису нужна база: postgres и redis поднимаются рядом,
+  пароль к базе генерируется при установке и никуда больше не попадает.
+
+  Каталог consume/ — это входящая папка: кладёшь туда скан, paperless его
+  забирает, распознаёт и раскладывает.
+
+requires:
+  memoryMiB: 2048
+
+primary: webserver
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8010
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: docs
+
+  - key: ADMIN_USER
+    label: Логин администратора
+    type: string
+    default: admin
+
+  - key: ADMIN_PASSWORD
+    label: Пароль администратора
+    type: secret
+    generate: password
+
+  - key: DB_PASSWORD
+    label: Пароль базы
+    type: secret
+    generate: password
+    hint: '// нужен только контейнерам стека'
+
+  - key: OCR_LANGUAGE
+    label: Языки распознавания
+    type: enum
+    options: ['rus+eng', 'rus', 'eng', 'deu+eng']
+    default: 'rus+eng'
+
+volumes:
+  - path: data/pgdata
+  - path: data/redis
+  - path: data/documents
+  - path: data/media
+  - path: consume
+
+compose:
+  services:
+    broker:
+      image: redis:7-alpine
+      restart: unless-stopped
+      volumes:
+        - ${DOCK_STACK_DIR}/data/redis:/data
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+
+    db:
+      image: postgres:16-alpine
+      restart: unless-stopped
+      volumes:
+        - ${DOCK_STACK_DIR}/data/pgdata:/var/lib/postgresql/data
+      environment:
+        POSTGRES_DB: paperless
+        POSTGRES_USER: paperless
+        POSTGRES_PASSWORD: ${DB_PASSWORD}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+
+    webserver:
+      image: ghcr.io/paperless-ngx/paperless-ngx:2.13.5
+      restart: unless-stopped
+      depends_on:
+        - db
+        - broker
+      ports:
+        - '${PORT}:8000'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/documents:/usr/src/paperless/data
+        - ${DOCK_STACK_DIR}/data/media:/usr/src/paperless/media
+        - ${DOCK_STACK_DIR}/consume:/usr/src/paperless/consume
+      environment:
+        PAPERLESS_REDIS: redis://broker:6379
+        PAPERLESS_DBHOST: db
+        PAPERLESS_DBUSER: paperless
+        PAPERLESS_DBPASS: ${DB_PASSWORD}
+        PAPERLESS_ADMIN_USER: ${ADMIN_USER}
+        PAPERLESS_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+        PAPERLESS_OCR_LANGUAGE: ${OCR_LANGUAGE}
+        PAPERLESS_TIME_ZONE: ${DOCK_TZ}
+        PAPERLESS_URL: http://${DOMAIN}.${DOCK_DOMAIN}
+        USERMAP_UID: '${DOCK_PUID}'
+        USERMAP_GID: '${DOCK_PGID}'
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Логин: ${ADMIN_USER}
+    Пароль: ${ADMIN_PASSWORD}
+
+    Входящая папка: ${DOCK_STACK_DIR}/consume — всё, что туда положишь,
+    уедет в архив с распознанным текстом.

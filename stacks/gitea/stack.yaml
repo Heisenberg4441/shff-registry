@@ -1,0 +1,67 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: gitea
+name: gitea
+version: 1.0.0
+category: код
+summary: 'Лёгкий git-хостинг: репозитории, issues, actions. Живёт в одном контейнере с sqlite.'
+meta: '// 180 MB · 1 контейнер'
+homepage: https://gitea.io
+
+primary: gitea
+
+inputs:
+  - key: PORT
+    label: Порт веб-морды
+    type: port
+    default: 3030
+    hostPort: true
+    required: true
+
+  - key: SSH_PORT
+    label: Порт ssh
+    type: port
+    default: 2222
+    hostPort: true
+    hint: '// по нему git push через ssh'
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: git
+
+volumes:
+  - path: data/gitea
+    owner: '1000:1000'
+
+compose:
+  services:
+    gitea:
+      image: gitea/gitea:1.22.6
+      restart: unless-stopped
+      ports:
+        - '${PORT}:3000'
+        - '${SSH_PORT}:22'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/gitea:/data
+        - /etc/localtime:/etc/localtime:ro
+      environment:
+        USER_UID: '${DOCK_PUID}'
+        USER_GID: '${DOCK_PGID}'
+        GITEA__server__ROOT_URL: http://${DOMAIN}.${DOCK_DOMAIN}/
+        GITEA__server__SSH_PORT: '${SSH_PORT}'
+        GITEA__service__DISABLE_REGISTRATION: 'true'
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Регистрация закрыта. Первый пользователь заводится в мастере установки —
+    он же станет администратором.

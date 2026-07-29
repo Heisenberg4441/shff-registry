@@ -1,0 +1,137 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: observability
+name: grafana + prometheus + loki
+version: 1.0.0
+category: мониторинг
+summary: >-
+  Наблюдаемость из коробки. Grafana приезжает с уже прописанными датасорсами и
+  дашбордом по хосту — открыл и смотришь.
+meta: '// 480 MB · 5 контейнеров'
+homepage: https://grafana.com
+maintainer: shff
+
+description: |
+  Пять контейнеров, которые обычно собирают руками полдня: grafana,
+  prometheus, node-exporter и, по желанию, loki с promtail.
+
+  Собраны они здесь не рядом, а связанными. Prometheus получает
+  сгенерированный scrape-конфиг, где node-exporter уже прописан по имени
+  сервиса. Grafana получает provisioning: датасорсы и дашборд по хосту
+  подкладываются файлами до первого старта, поэтому логина «admin» и пустого
+  списка датасорсов не бывает. Loki, если он включён, попадает в grafana
+  вторым датасорсом, а promtail забирает логи всех контейнеров с сокета.
+
+requires:
+  arch: [amd64, arm64]
+  memoryMiB: 1024
+
+primary: grafana
+
+inputs:
+  - key: PORT
+    label: Порт grafana
+    type: port
+    default: 3000
+    hostPort: true
+    required: true
+    hint: '// сюда ходишь браузером'
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: grafana
+    hint: '// grafana.${DOCK_DOMAIN}, если включён прокси'
+
+  - key: ADMIN_USER
+    label: Логин администратора
+    type: string
+    default: admin
+
+  - key: ADMIN_PASSWORD
+    label: Пароль администратора
+    type: secret
+    generate: password
+    hint: '// оставь пустым — сгенерирую и покажу после установки'
+
+  - key: PROMETHEUS_PORT
+    label: Порт prometheus
+    type: port
+    default: 9090
+    hostPort: true
+    hint: '// нужен, только если ходить в prometheus напрямую'
+
+  - key: SCRAPE_INTERVAL
+    label: Как часто снимать метрики
+    type: enum
+    options: ['15s', '30s', '60s']
+    default: '15s'
+
+  - key: RETENTION
+    label: Хранить метрики
+    type: enum
+    options: ['7d', '15d', '30d', '90d', '365d']
+    default: '30d'
+
+  - key: ENABLE_LOKI
+    label: Собирать логи контейнеров в loki
+    type: bool
+    default: true
+    hint: '// добавит loki и promtail, +200 MB'
+
+# Профиль compose включается булевым инпутом: выключил — сервисы не поднимутся
+profiles:
+  - name: loki
+    when: ENABLE_LOKI
+
+# Каталоги данных создаются заранее и с правильным владельцем. Если этого не
+# сделать, докер создаст их от root, а grafana (uid 472) и prometheus (uid
+# 65534) работают не от root и не смогут туда писать.
+volumes:
+  - path: data/grafana
+    owner: '472:0'
+  - path: data/prometheus
+    owner: '65534:65534'
+  - path: data/loki
+    owner: '10001:10001'
+
+files:
+  - path: prometheus/prometheus.yml
+    template: files/prometheus.yml.tmpl
+
+  - path: grafana/provisioning/datasources/prometheus.yaml
+    template: files/ds-prometheus.yaml.tmpl
+
+  - path: grafana/provisioning/datasources/loki.yaml
+    template: files/ds-loki.yaml.tmpl
+    when: ENABLE_LOKI
+
+  - path: grafana/provisioning/dashboards/dock.yaml
+    template: files/dashboards.yaml.tmpl
+
+  - path: grafana/dashboards/host.json
+    template: files/host-dashboard.json
+
+  - path: loki/loki-config.yaml
+    template: files/loki-config.yaml.tmpl
+    when: ENABLE_LOKI
+
+  - path: promtail/promtail-config.yaml
+    template: files/promtail-config.yaml.tmpl
+    when: ENABLE_LOKI
+
+compose: compose.yaml
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Логин: ${ADMIN_USER}
+    Пароль: ${ADMIN_PASSWORD}
+
+    Датасорсы prometheus и loki уже прописаны, дашборд «Хост» лежит в папке dock.
+  health:
+    service: grafana
+    path: /api/health
+    port: 3000
+    timeoutSeconds: 120

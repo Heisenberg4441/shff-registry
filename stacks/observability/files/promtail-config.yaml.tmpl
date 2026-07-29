@@ -1,0 +1,34 @@
+# Забирает логи всех контейнеров прямо с докер-сокета: список целей не надо
+# поддерживать руками, новый стек начинает логироваться сам.
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: warn
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 15s
+
+    relabel_configs:
+      # /observability-grafana-1 → observability-grafana-1
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: container
+
+      # метки compose дают разбивку по стеку и сервису бесплатно
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_project']
+        target_label: stack
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: service
+
+      - target_label: host
+        replacement: ${DOCK_HOSTNAME}

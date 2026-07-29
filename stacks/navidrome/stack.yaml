@@ -1,0 +1,65 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: navidrome
+name: navidrome
+version: 1.0.0
+category: медиа
+summary: Стриминг своей музыкальной коллекции. Совместим с subsonic-клиентами.
+meta: '// 60 MB · 1 контейнер'
+homepage: https://www.navidrome.org
+
+primary: navidrome
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 4533
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: music
+
+  - key: MUSIC_PATH
+    label: Каталог с музыкой на хосте
+    type: path
+    default: /home/dock/media/music
+    required: true
+    hint: '// монтируется только на чтение'
+
+volumes:
+  - path: data/navidrome
+    owner: '1000:1000'
+
+compose:
+  services:
+    navidrome:
+      image: deluan/navidrome:0.53.3
+      restart: unless-stopped
+      user: '${DOCK_PUID}:${DOCK_PGID}'
+      ports:
+        - '${PORT}:4533'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/navidrome:/data
+        - ${MUSIC_PATH}:/music:ro
+      environment:
+        ND_SCANSCHEDULE: 1h
+        ND_LOGLEVEL: info
+        ND_BASEURL: ''
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Первый зашедший пользователь становится администратором.
+    Музыка читается из ${MUSIC_PATH} — каталог должен существовать до установки.
