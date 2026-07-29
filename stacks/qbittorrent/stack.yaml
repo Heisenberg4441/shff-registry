@@ -3,7 +3,7 @@ kind: Stack
 
 id: qbittorrent
 name: qbittorrent
-version: 1.1.0
+version: 1.1.1
 category: медиа
 summary: Торрент-клиент с веб-мордой. Раскладывает скачанное по общей медиатеке.
 meta: '// 200 MB · 1 контейнер'
@@ -15,8 +15,13 @@ description: |
 
   Раскладка по папкам сделана категориями. Их три — music, films и shows, —
   и они уже заведены с нужными путями: выбрали при добавлении торрента,
-  дальше qbittorrent сам положит куда надо и там же оставит. Торрент без
-  категории уходит в media/downloads.
+  дальше qbittorrent сам кладёт файлы в нужную папку. Торрент без категории
+  уходит в media/downloads.
+
+  Работает это за счёт включённого автоматического режима: без него категория
+  осталась бы просто ярлыком, а файлы всё равно ложились бы в путь по
+  умолчанию. Смена категории у уже добавленного торрента переносит его файлы
+  следом.
 
   Пароль при первом запуске qbittorrent генерирует сам и печатает в свой
   журнал. Панель подхватывает его вместе с первыми строками вывода, так что
@@ -76,9 +81,10 @@ files:
           "shows": { "save_path": "/media/shows" }
       }
 
-  # Минимальный конфиг: куда складывать всё остальное и включённое
-  # автоуправление, из-за которого торрент category=music физически лежит
-  # в /media/music, а не просто помечен ею.
+  # Ключевое здесь — DisableAutoTMMByDefault=false. Без него «автоматический
+  # режим» у новых торрентов выключен, категория остаётся просто ярлыком, и
+  # файлы всё равно ложатся в путь по умолчанию. Триггеры ниже досылают уже
+  # добавленный торрент в новую папку, когда ему меняют категорию.
   - path: data/config/qBittorrent/qBittorrent.conf
     content: |
       [BitTorrent]
@@ -86,6 +92,10 @@ files:
       Session\TempPath=/media/downloads/.incomplete
       Session\TempPathEnabled=true
       Session\TorrentContentLayout=Original
+      Session\DisableAutoTMMByDefault=false
+      Session\DisableAutoTMMTriggers\CategoryChanged=false
+      Session\DisableAutoTMMTriggers\CategorySavePathChanged=false
+      Session\DisableAutoTMMTriggers\DefaultSavePathChanged=false
 
       [Preferences]
       Downloads\SavePath=/media/downloads
@@ -136,6 +146,12 @@ post:
       категория shows  → ${DOCK_MEDIA_DIR}/shows
       без категории    → ${DOCK_MEDIA_DIR}/downloads
 
-    Категория выбирается в окне добавления торрента. Полностью автоматическая
-    сортировка — это задача sonarr и radarr: они сами определяют, что скачали,
-    и раскладывают по библиотеке. qbittorrent такого не умеет.
+    Категория выбирается в окне добавления торрента, дальше файлы едут в свою
+    папку сами. Смена категории у уже скачанного переносит и файлы.
+
+    Торренты, добавленные до этой версии, остались в ручном режиме: выделите
+    их, правой кнопкой → «Automatic Torrent Management», и они переедут по
+    своим папкам без единой команды в терминале.
+
+    Полностью автоматическая сортировка по содержимому — это задача sonarr и
+    radarr: они сами определяют, что скачали. qbittorrent такого не умеет.

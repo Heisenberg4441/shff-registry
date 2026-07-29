@@ -61,7 +61,7 @@ stacks:
 
   - id: qbittorrent
     name: qbittorrent
-    version: 1.1.0
+    version: 1.1.1
     category: медиа
     summary: Торрент-клиент с веб-мордой. Раскладывает скачанное по общей медиатеке.
     meta: '// 200 MB · 1 контейнер'
