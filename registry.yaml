@@ -53,7 +53,7 @@ stacks:
 
   - id: navidrome
     name: navidrome
-    version: 1.0.0
+    version: 1.1.0
     category: медиа
     summary: Стриминг своей музыкальной коллекции. Совместим с subsonic-клиентами.
     meta: '// 60 MB · 1 контейнер'
@@ -61,9 +61,9 @@ stacks:
 
   - id: qbittorrent
     name: qbittorrent
-    version: 1.0.0
+    version: 1.1.0
     category: медиа
-    summary: Торрент-клиент с веб-мордой. Качает в фоне, управляется из браузера.
+    summary: Торрент-клиент с веб-мордой. Раскладывает скачанное по общей медиатеке.
     meta: '// 200 MB · 1 контейнер'
     path: stacks/qbittorrent
 

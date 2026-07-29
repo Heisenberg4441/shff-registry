@@ -89,6 +89,9 @@ profiles:                        # родные compose-профили, вклю
 volumes:                         # создаются заранее и с нужным владельцем
   - path: data/grafana
     owner: '472:0'
+  - path: media/films            # shared — путь от /home/dock, а не от стека
+    shared: true
+    owner: '1000:1000'
 
 files:                           # рендерятся в каталог стека
   - path: prometheus/prometheus.yml
@@ -128,9 +131,22 @@ compose-файлом, подстановку `${PORT}` делает сам docke
 
 ### Что подставляет сама панель
 
-`DOCK_STACK_ID`, `DOCK_STACK_DIR`, `DOCK_DATA_DIR`, `DOCK_NETWORK`, `DOCK_TZ`,
-`DOCK_DOMAIN`, `DOCK_HOSTNAME`, `DOCK_PUID`, `DOCK_PGID`. Перекрыть их инпутом
-нельзя.
+`DOCK_STACK_ID`, `DOCK_STACK_DIR`, `DOCK_DATA_DIR`, `DOCK_MEDIA_DIR`,
+`DOCK_NETWORK`, `DOCK_TZ`, `DOCK_DOMAIN`, `DOCK_HOSTNAME`, `DOCK_PUID`,
+`DOCK_PGID`. Перекрыть их инпутом нельзя.
+
+### Общая медиатека
+
+`/home/dock/media` — библиотека, общая для всех медийных стеков: качалка её
+наполняет, плееры читают. Внутри `music`, `films`, `shows` и `downloads`.
+
+Каталог оттуда объявляется томом с `shared: true` — тогда панель создаст его
+с нужным владельцем до первого запуска и **не удалит** вместе со стеком.
+Ссылаться на него в compose нужно через `${DOCK_MEDIA_DIR}`: `DOCK_STACK_DIR`
+ведёт внутрь стека, а библиотека живёт снаружи.
+
+Не заводите свой каталог под медиа: смысл соглашения в том, что скачанное
+qbittorrent'ом в `music` сразу видит navidrome, без переносов и симлинков.
 
 ### Порядок установки
 
