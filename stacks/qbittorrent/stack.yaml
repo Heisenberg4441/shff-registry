@@ -1,0 +1,88 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: qbittorrent
+name: qbittorrent
+version: 1.0.0
+category: медиа
+summary: Торрент-клиент с веб-мордой. Качает в фоне, управляется из браузера.
+meta: '// 200 MB · 1 контейнер'
+homepage: https://www.qbittorrent.org
+
+description: |
+  Пароль при первом запуске qbittorrent генерирует сам и печатает в журнал —
+  панель показывает его на вкладке «журнал» сразу после установки. Первым делом
+  смените: Tools → Options → Web UI.
+
+  Качает внутрь каталога стека, чтобы работать сразу и без подготовки. Если
+  место под закачки на другом диске, поправьте монтирование /downloads через
+  кнопку «compose» на карточке сервиса.
+
+primary: qbittorrent
+
+inputs:
+  - key: WEB_PORT
+    label: Порт веб-морды
+    type: port
+    default: 8080
+    hostPort: true
+    required: true
+
+  - key: TORRENT_PORT
+    label: Порт для торрентов
+    type: port
+    default: 6881
+    hostPort: true
+    required: true
+    hint: '// его же пробрасывать на роутере, иначе только скачивание'
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: torrent
+
+volumes:
+  - path: data/config
+    owner: '1000:1000'
+  - path: data/downloads
+    owner: '1000:1000'
+
+compose:
+  services:
+    qbittorrent:
+      image: linuxserver/qbittorrent:5.2.3_v2.0.13-ls469
+      restart: unless-stopped
+      ports:
+        # Порт веб-морды совпадает снаружи и внутри: образ поднимает интерфейс
+        # ровно на WEBUI_PORT, и разъезд с публикацией даёт пустую страницу.
+        - '${WEB_PORT}:${WEB_PORT}'
+        - '${TORRENT_PORT}:${TORRENT_PORT}/tcp'
+        - '${TORRENT_PORT}:${TORRENT_PORT}/udp'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/config:/config
+        - ${DOCK_STACK_DIR}/data/downloads:/downloads
+      environment:
+        PUID: ${DOCK_PUID}
+        PGID: ${DOCK_PGID}
+        TZ: ${DOCK_TZ}
+        WEBUI_PORT: ${WEB_PORT}
+        TORRENTING_PORT: ${TORRENT_PORT}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${WEB_PORT}'
+  notes: |
+    Логин: admin
+    Пароль: временный, напечатан в журнале стека — ищите строку
+    «A temporary password is provided for this session».
+
+    Смените его сразу: Tools → Options → Web UI → Authentication.
+
+    Закачки складываются в data/downloads внутри каталога стека. Чтобы качать
+    на другой диск, поправьте монтирование /downloads через «compose» на
+    карточке сервиса — каталог на хосте должен принадлежать ${DOCK_PUID}:${DOCK_PGID}.

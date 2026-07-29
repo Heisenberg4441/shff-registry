@@ -1,0 +1,89 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: torrserver
+name: torrserver
+version: 1.0.0
+category: медиа
+summary: Смотрит торренты потоком, без скачивания целиком. Отдаёт их телевизору и медиаплееру.
+meta: '// 50 MB · 1 контейнер'
+homepage: https://github.com/YouROK/TorrServer
+
+description: |
+  Раздаёт содержимое торрента как обычный поток: плеер начинает играть, не
+  дожидаясь конца загрузки. Работает с клиентами на Android TV, Kodi и
+  большинством плееров, понимающих m3u.
+
+  Ставится сразу с паролем — TorrServer по умолчанию открыт всем, кто дотянулся
+  до порта, а это ровно вся домашняя сеть.
+
+primary: torrserver
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8090
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: ts
+
+  - key: USERNAME
+    label: Пользователь
+    type: string
+    default: admin
+    required: true
+
+  - key: PASSWORD
+    label: Пароль
+    type: secret
+    generate: password
+    hint: '// оставь пустым — сгенерирую'
+
+files:
+  # Список пользователей TorrServer — обычный json «логин: пароль».
+  # Кладётся до старта: без этого файла авторизация просто не включится.
+  - path: data/ts/accs.db
+    mode: '600'
+    content: |
+      {"${USERNAME}": "${PASSWORD}"}
+
+volumes:
+  - path: data/ts
+
+compose:
+  services:
+    torrserver:
+      image: ghcr.io/yourok/torrserver:MatriX.142.2
+      restart: unless-stopped
+      ports:
+        - '${PORT}:${PORT}'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/ts:/opt/ts
+      environment:
+        TS_PORT: '${PORT}'
+        TS_CONF_PATH: /opt/ts
+        TS_HTTPAUTH: '1'
+        # Иначе контейнер глушит сервер при каждой правке настроек изнутри.
+        TS_DONTKILL: '1'
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Логин: ${USERNAME}
+    Пароль: ${PASSWORD}
+
+    Эти же логин и пароль спрашивают клиенты на телевизоре при добавлении
+    сервера. Список пользователей лежит в data/ts/accs.db внутри каталога
+    стека — туда же дописываются остальные, если нужно несколько.

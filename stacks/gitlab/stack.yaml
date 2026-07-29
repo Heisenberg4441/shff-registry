@@ -1,0 +1,105 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: gitlab
+name: gitlab-ce
+version: 1.0.0
+category: код
+summary: Репозитории, CI/CD, реестр образов и доски задач в одном сервисе. Тяжёлый — просит от 4 ГБ памяти.
+meta: '// 2.7 GB · 1 контейнер'
+homepage: https://about.gitlab.com
+
+description: |
+  Самый прожорливый стек в каталоге: образ под 3 ГБ, в памяти держит 3–4 ГБ и
+  разворачивается несколько минут. Первый запуск дольше остальных — GitLab
+  доводит конфигурацию до ума уже после старта контейнера, и всё это время
+  веб-морда отдаёт 502. Это нормально, ждите.
+
+  Встроенный prometheus выключен: наблюдаемость в каталоге есть отдельным
+  стеком, а GitLab вместе со своей ест заметно больше.
+
+  Если нужен просто git-хостинг без CI и реестра образов — берите gitea, она
+  на порядок легче.
+
+primary: gitlab
+
+inputs:
+  - key: WEB_PORT
+    label: Порт веб-морды
+    type: port
+    default: 8929
+    hostPort: true
+    required: true
+
+  - key: SSH_PORT
+    label: Порт SSH для git
+    type: port
+    default: 2224
+    hostPort: true
+    required: true
+    hint: '// 22-й занят самим сервером, поэтому не он'
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: git
+
+  - key: ROOT_PASSWORD
+    label: Пароль администратора
+    type: secret
+    generate: password
+    hint: '// логин root — оставь пустым, сгенерирую'
+
+volumes:
+  - path: data/config
+  - path: data/logs
+  - path: data/data
+
+compose:
+  services:
+    gitlab:
+      image: gitlab/gitlab-ce:19.1.2-ce.0
+      restart: unless-stopped
+      hostname: ${DOCK_HOSTNAME}
+      # GitLab пишет в разделяемую память при работе с git; дефолтных 64 МБ ему мало.
+      shm_size: '256m'
+      ports:
+        # Порт совпадает снаружи и внутри: nginx внутри слушает тот, что указан
+        # в external_url, и разъезд ломает редиректы после логина.
+        - '${WEB_PORT}:${WEB_PORT}'
+        - '${SSH_PORT}:22'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/config:/etc/gitlab
+        - ${DOCK_STACK_DIR}/data/logs:/var/log/gitlab
+        - ${DOCK_STACK_DIR}/data/data:/var/opt/gitlab
+      environment:
+        TZ: ${DOCK_TZ}
+        GITLAB_OMNIBUS_CONFIG: |
+          external_url 'http://${DOCK_HOSTNAME}:${WEB_PORT}'
+          gitlab_rails['gitlab_shell_ssh_port'] = ${SSH_PORT}
+          gitlab_rails['initial_root_password'] = '${ROOT_PASSWORD}'
+          prometheus_monitoring['enable'] = false
+          puma['worker_processes'] = 2
+          sidekiq['max_concurrency'] = 10
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${WEB_PORT}'
+  notes: |
+    Логин: root
+    Пароль: ${ROOT_PASSWORD}
+
+    Первые 3–5 минут веб-морда отдаёт 502 — GitLab ещё настраивается. Панель
+    при этом честно показывает контейнер запущенным, потому что он и правда
+    запущен.
+
+    Клонировать по ssh:
+    git clone ssh://git@${DOCK_HOSTNAME}:${SSH_PORT}/<группа>/<репозиторий>.git
+
+    Пароль root лежит в открытом виде в data/config/initial_root_password
+    внутри каталога стека — GitLab удалит этот файл сам через сутки.

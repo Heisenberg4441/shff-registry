@@ -35,6 +35,14 @@ stacks:
     meta: '// 180 MB · 1 контейнер'
     path: stacks/gitea
 
+  - id: gitlab
+    name: gitlab-ce
+    version: 1.0.0
+    category: код
+    summary: Репозитории, CI/CD, реестр образов и доски задач в одном сервисе. Тяжёлый — просит от 4 ГБ памяти.
+    meta: '// 2.7 GB · 1 контейнер'
+    path: stacks/gitlab
+
   - id: uptime-kuma
     name: uptime-kuma
     version: 1.0.0
@@ -50,6 +58,22 @@ stacks:
     summary: Стриминг своей музыкальной коллекции. Совместим с subsonic-клиентами.
     meta: '// 60 MB · 1 контейнер'
     path: stacks/navidrome
+
+  - id: qbittorrent
+    name: qbittorrent
+    version: 1.0.0
+    category: медиа
+    summary: Торрент-клиент с веб-мордой. Качает в фоне, управляется из браузера.
+    meta: '// 200 MB · 1 контейнер'
+    path: stacks/qbittorrent
+
+  - id: torrserver
+    name: torrserver
+    version: 1.0.0
+    category: медиа
+    summary: Смотрит торренты потоком, без скачивания целиком. Отдаёт их телевизору и медиаплееру.
+    meta: '// 50 MB · 1 контейнер'
+    path: stacks/torrserver
 
   - id: adguard
     name: adguard-home
