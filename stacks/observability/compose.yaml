@@ -61,6 +61,25 @@ services:
     labels:
       dock.stack: ${DOCK_STACK_ID}
 
+  # Метрики контейнеров: cpu, память, сеть и диск по каждому. Без него дашборд
+  # по контейнерам пуст — эти ряды больше взять неоткуда.
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    restart: unless-stopped
+    # cadvisor читает cgroups и статистику всех контейнеров хоста; без
+    # привилегий он поднимается, но отдаёт пустоту.
+    privileged: true
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    labels:
+      dock.stack: ${DOCK_STACK_ID}
+
   loki:
     image: grafana/loki:3.2.1
     profiles: [loki]

@@ -19,6 +19,13 @@ scrape_configs:
         labels:
           instance: ${DOCK_HOSTNAME}
 
+  # Метрики контейнеров: их читает дашборд «контейнеры»
+  - job_name: cadvisor
+    static_configs:
+      - targets: ['cadvisor:8080']
+        labels:
+          instance: ${DOCK_HOSTNAME}
+
   - job_name: grafana
     static_configs:
       - targets: ['grafana:3000']

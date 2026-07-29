@@ -15,8 +15,8 @@ stacks:
     name: grafana + prometheus + loki
     version: 1.0.0
     category: мониторинг
-    summary: 'Наблюдаемость из коробки. Grafana приезжает с уже прописанными датасорсами и дашбордом по хосту — открыл и смотришь.'
-    meta: '// 480 MB · 5 контейнеров'
+    summary: 'Наблюдаемость из коробки. Grafana приезжает с прописанными датасорсами и тремя готовыми дашбордами — открыл и смотришь.'
+    meta: '// 600 MB · 6 контейнеров'
     path: stacks/observability
 
   - id: vaultwarden

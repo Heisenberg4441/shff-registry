@@ -6,22 +6,26 @@ name: grafana + prometheus + loki
 version: 1.0.0
 category: мониторинг
 summary: >-
-  Наблюдаемость из коробки. Grafana приезжает с уже прописанными датасорсами и
-  дашбордом по хосту — открыл и смотришь.
-meta: '// 480 MB · 5 контейнеров'
+  Наблюдаемость из коробки. Grafana приезжает с прописанными датасорсами и тремя
+  готовыми дашбордами — открыл и смотришь.
+meta: '// 600 MB · 6 контейнеров'
 homepage: https://grafana.com
 maintainer: shff
 
 description: |
-  Пять контейнеров, которые обычно собирают руками полдня: grafana,
-  prometheus, node-exporter и, по желанию, loki с promtail.
+  Шесть контейнеров, которые обычно собирают руками полдня: grafana,
+  prometheus, node-exporter, cadvisor и, по желанию, loki с promtail.
 
   Собраны они здесь не рядом, а связанными. Prometheus получает
-  сгенерированный scrape-конфиг, где node-exporter уже прописан по имени
-  сервиса. Grafana получает provisioning: датасорсы и дашборд по хосту
+  сгенерированный scrape-конфиг, где node-exporter и cadvisor уже прописаны по
+  именам сервисов. Grafana получает provisioning: датасорсы и дашборды
   подкладываются файлами до первого старта, поэтому логина «admin» и пустого
   списка датасорсов не бывает. Loki, если он включён, попадает в grafana
   вторым датасорсом, а promtail забирает логи всех контейнеров с сокета.
+
+  Дашбордов три, все с grafana.com и уже настроенные на местные датасорсы:
+  Node Exporter Full (1860) — железо целиком, cAdvisor Overview (21743) —
+  по контейнеру, Loki Logs Overview (24673) — логи, если включён loki.
 
 requires:
   arch: [amd64, arm64]
@@ -110,8 +114,17 @@ files:
   - path: grafana/provisioning/dashboards/dock.yaml
     template: files/dashboards.yaml.tmpl
 
-  - path: grafana/dashboards/host.json
-    template: files/host-dashboard.json
+  # Готовые дашборды с grafana.com, положенные до первого старта. Датасорсы в
+  # них уже переписаны на наши, поэтому «выберите источник данных» не спросят.
+  - path: grafana/dashboards/node.json
+    template: files/dash-node.json
+
+  - path: grafana/dashboards/containers.json
+    template: files/dash-containers.json
+
+  - path: grafana/dashboards/loki.json
+    template: files/dash-loki.json
+    when: ENABLE_LOKI
 
   - path: loki/loki-config.yaml
     template: files/loki-config.yaml.tmpl
@@ -129,7 +142,8 @@ post:
     Логин: ${ADMIN_USER}
     Пароль: ${ADMIN_PASSWORD}
 
-    Датасорсы prometheus и loki уже прописаны, дашборд «Хост» лежит в папке dock.
+    Датасорсы уже прописаны. В папке dock лежат три дашборда: Node Exporter
+    Full — железо, cAdvisor Overview — контейнеры, Loki Logs Overview — логи.
   health:
     service: grafana
     path: /api/health
