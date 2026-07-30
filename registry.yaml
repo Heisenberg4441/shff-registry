@@ -8,7 +8,7 @@
 apiVersion: dock/v1
 kind: Registry
 name: SHFF stacks
-updated: 2026-07-29
+updated: 2026-07-30
 
 stacks:
   - id: observability
@@ -90,3 +90,11 @@ stacks:
     summary: Архив бумажных документов с OCR и поиском по тексту. Приезжает с postgres и redis, русский и английский OCR включены.
     meta: '// 900 MB · 4 контейнера'
     path: stacks/paperless
+
+  - id: shff-planner
+    name: shff-planner
+    version: 1.0.0
+    category: личное
+    summary: Поминутный планировщик суток. Своя база, без облака и аккаунтов.
+    meta: '// 100 MB · 1 контейнер'
+    path: stacks/shff-planner
