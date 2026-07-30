@@ -62,7 +62,7 @@ volumes:
 compose:
   services:
     planner:
-      image: heisenberg4441/shff-planner:1.0.0
+      image: heisenberg4441/shff-planner:latest
       restart: unless-stopped
       user: '${DOCK_PUID}:${DOCK_PGID}'
       ports:
