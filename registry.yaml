@@ -93,7 +93,7 @@ stacks:
 
   - id: shff-planner
     name: shff-planner
-    version: 1.0.0
+    version: 1.0.1
     category: личное
     summary: Поминутный планировщик суток. Своя база, без облака и аккаунтов.
     meta: '// 100 MB · 1 контейнер'
