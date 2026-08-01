@@ -8,7 +8,7 @@
 apiVersion: dock/v1
 kind: Registry
 name: SHFF stacks
-updated: 2026-07-30
+updated: 2026-08-01
 
 stacks:
   - id: observability
@@ -98,3 +98,11 @@ stacks:
     summary: Поминутный планировщик суток. Своя база, без облака и аккаунтов.
     meta: '// 100 MB · 1 контейнер'
     path: stacks/shff-planner
+
+  - id: shff-notes
+    name: shff-notes
+    version: 1.0.0
+    category: личное
+    summary: Личные заметки с markdown и поиском. Своя база, без облака и аккаунтов.
+    meta: '// 100 MB · 1 контейнер'
+    path: stacks/shff-notes
