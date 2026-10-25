@@ -14,3 +14,10 @@ services:
       - ${DOCK_MEDIA_DIR}/films:/media/films:ro
       - ${DOCK_MEDIA_DIR}/shows:/media/shows:ro
       - ${DOCK_MEDIA_DIR}/music:/media/music:ro
+  - id: jellyfin
+    name: jellyfin
+    version: 1.0.0
+    category: медиа
+    summary: 'Медиасервер для фильмов, сериалов и музыки. Приложения для ТВ и телефона.'
+    meta: '// ~1 GB · 1 контейнер'
+    path: stacks/jellyfin
