@@ -1,1 +1,16 @@
-
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    user: '${DOCK_PUID}:${DOCK_PGID}'
+    restart: unless-stopped
+    ports:
+      - '${PORT}:8096'
+    environment:
+      TZ: ${DOCK_TZ}
+      JELLYFIN_PublishedServerUrl: http://${DOCK_HOSTNAME}:${PORT}
+    volumes:
+      - ${DOCK_STACK_DIR}/data/config:/config
+      - ${DOCK_STACK_DIR}/data/cache:/cache
+      - ${DOCK_MEDIA_DIR}/films:/media/films:ro
+      - ${DOCK_MEDIA_DIR}/shows:/media/shows:ro
+      - ${DOCK_MEDIA_DIR}/music:/media/music:ro
