@@ -106,3 +106,11 @@ stacks:
     summary: Личные заметки с markdown и поиском. Своя база, без облака и аккаунтов.
     meta: '// 100 MB · 1 контейнер'
     path: stacks/shff-notes
+ 
+  - id: jellyfin
+    name: jellyfin
+    version: 1.0.0
+    category: медиа
+    summary: 'Медиасервер для фильмов, сериалов и музыки. Приложения для ТВ и телефона.'
+    meta: '// ~1 GB · 1 контейнер'
+    path: stacks/jellyfin
