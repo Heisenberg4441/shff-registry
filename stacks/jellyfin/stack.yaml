@@ -1,1 +1,36 @@
+apiVersion: dock/v1
+kind: Stack
+id: jellyfin
+name: jellyfin
+version: 1.0.0
+category: медиа
+summary: 'Медиасервер: фильмы, сериалы и музыка, приложения для ТВ и телефона.'
+primary: jellyfin
 
+inputs:
+  - key: PORT
+    label: Порт jellyfin
+    type: port
+    default: 8096
+    hostPort: true
+
+volumes:
+  - path: data/config
+    owner: '1000:1000'
+  - path: data/cache
+    owner: '1000:1000'
+  - path: media/films
+    shared: true
+    owner: '1000:1000'
+  - path: media/shows
+    shared: true
+    owner: '1000:1000'
+  - path: media/music
+    shared: true
+    owner: '1000:1000'
+
+compose: compose.yaml
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: 'Откройте адрес, пройдите мастер и добавьте библиотеки из /media/films, /media/shows, /media/music.'
