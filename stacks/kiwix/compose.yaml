@@ -1,0 +1,26 @@
+services:
+  kiwix:
+    image: ghcr.io/kiwix/kiwix-serve:latest
+    command: ["*.zim"]
+    ports:
+      - "${PORT}:8080"
+    volumes:
+      - ${DOCK_STACK_DIR}/data/zim:/data:ro
+    restart: unless-stopped
+
+  zim-download:
+    image: alpine:3
+    working_dir: /data
+    environment:
+      ZIM_URL: ${ZIM_URL}
+    volumes:
+      - ${DOCK_STACK_DIR}/data/zim:/data
+    restart: "no"
+    command:
+      - sh
+      - -c
+      - |
+        [ -n "$$ZIM_URL" ] || exit 0
+        f=$$(basename "$$ZIM_URL")
+        [ -f "$$f" ] && exit 0
+        wget -c -O "$$f.part" "$$ZIM_URL" && mv "$$f.part" "$$f"
