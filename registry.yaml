@@ -116,9 +116,9 @@ stacks:
     path: stacks/jellyfin
    
   - id: kiwix
-   name: kiwix
-   version: 1.0.0
-   category: данные
-   summary: 'Википедия и другие сайты офлайн из ZIM-файлов. Нужный файл скачивается при установке.'
-   meta: '// 2 контейнера · ZIM-файл отдельно'
-   path: stacks/kiwix
+    name: kiwix
+    version: 1.0.0
+    category: данные
+    summary: 'Википедия и другие сайты офлайн из ZIM-файлов. Нужный файл скачивается при установке.'
+    meta: '// 2 контейнера · ZIM-файл отдельно'
+    path: stacks/kiwix
