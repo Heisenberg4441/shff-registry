@@ -114,7 +114,7 @@ stacks:
     summary: 'Медиасервер для фильмов, сериалов и музыки. Приложения для ТВ и телефона.'
     meta: '// ~1 GB · 1 контейнер'
     path: stacks/jellyfin
-   
+    
   - id: kiwix
     name: kiwix
     version: 1.0.0
