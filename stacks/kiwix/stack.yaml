@@ -1,0 +1,29 @@
+apiVersion: dock/v1
+kind: Stack
+id: kiwix
+name: kiwix (Википедия офлайн)
+version: 1.0.0
+category: данные
+summary: 'Википедия и другие сайты офлайн, из ZIM-файлов.'
+primary: kiwix
+
+inputs:
+  - key: PORT
+    label: Порт kiwix
+    type: port
+    default: 8081
+    hostPort: true
+  - key: ZIM_URL
+    label: Ссылка на ZIM-файл (с download.kiwix.org/zim/wikipedia/)
+    type: string
+    default: ''
+
+volumes:
+  - path: data/zim
+    owner: '1000:1000'
+
+compose: compose.yaml
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: 'Файл качается в фоне. Пока он не докачался, kiwix перезапускается сам, это нормально.'
