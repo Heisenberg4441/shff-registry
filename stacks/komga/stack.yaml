@@ -1,0 +1,69 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: komga
+name: komga
+version: 1.0.0
+category: книги
+summary: Комиксы и манга с удобной читалкой в браузере и на планшете.
+meta: '// 300 MB · 1 контейнер'
+homepage: https://komga.org
+
+description: |
+  Сервер комиксов: читает cbz/cbr/pdf, помнит прогресс по сериям и отдаёт
+  библиотеку в приложения (Tachiyomi, Panels) по OPDS.
+
+  Библиотека лежит в общей медиатеке — /home/dock/media/comics.
+
+primary: komga
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 25600
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: comics
+
+volumes:
+  - path: data/config
+
+  # Общая медиатека: не удаляется вместе со стеком.
+  - path: media/comics
+    shared: true
+    owner: '1000:1000'
+
+compose:
+  services:
+    komga:
+      image: gotson/komga:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:25600'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/config:/config
+        - ${DOCK_MEDIA_DIR}/comics:/comics
+        - /etc/localtime:/etc/localtime:ro
+      environment:
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Первый зашедший заводит аккаунт администратора. Дальше создайте
+    библиотеку на /comics — серии и обложки подтянутся из самих файлов.
+
+    Комиксы складывайте в ${DOCK_MEDIA_DIR}/comics папками
+    «серия/том».

@@ -162,3 +162,11 @@ stacks:
     meta: '// 250 MB · 1 контейнер'
     path: stacks/calibre-web
 
+  - id: komga
+    name: komga
+    version: 1.0.0
+    category: книги
+    summary: Комиксы и манга с удобной читалкой в браузере и на планшете.
+    meta: '// 300 MB · 1 контейнер'
+    path: stacks/komga
+
