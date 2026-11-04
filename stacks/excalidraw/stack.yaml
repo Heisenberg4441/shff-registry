@@ -1,0 +1,52 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: excalidraw
+name: excalidraw
+version: 1.0.0
+category: инструменты
+summary: Рисование схем «от руки» в браузере, с совместным редактированием.
+meta: '// 40 MB · 1 контейнер'
+homepage: https://excalidraw.com
+
+description: |
+  Блокнот для схем: рисует как от руки, экспортирует в png/svg.
+  Доску можно разослать ссылкой — правят вместе в реальном времени.
+
+  Данные нигде не хранятся, если сам не включил сохранение.
+
+primary: excalidraw
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8285
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: draw
+
+compose:
+  services:
+    excalidraw:
+      image: excalidraw/excalidraw:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:80'
+      environment:
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: 'Совместное редактирование: меню → Share → не забудьте отметить «Collaboration».'

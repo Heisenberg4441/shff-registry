@@ -258,3 +258,11 @@ stacks:
     meta: '// 400 MB · 2 контейнера'
     path: stacks/bookstack
 
+  - id: excalidraw
+    name: excalidraw
+    version: 1.0.0
+    category: инструменты
+    summary: Рисование схем «от руки» в браузере, с совместным редактированием.
+    meta: '// 40 MB · 1 контейнер'
+    path: stacks/excalidraw
+
