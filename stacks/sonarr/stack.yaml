@@ -1,0 +1,75 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: sonarr
+name: sonarr
+version: 1.0.0
+category: медиа
+summary: То же, что radarr, но для сериалов: сезоны, серии, озвучка.
+meta: '// 250 MB · 1 контейнер'
+homepage: https://sonarr.tv
+
+description: |
+  Менеджер сериалов: следит за новыми сериями и сезонами, скачивает их
+  в qbittorrent и раскладывает по папкам сам.
+
+  Пишет в общую медиатеку — jellyfin увидит новые серии без переносов.
+
+primary: sonarr
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8989
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: shows
+
+volumes:
+  - path: data/config
+
+  # Общая медиатека: не удаляется вместе со стеком.
+  - path: media/shows
+    shared: true
+    owner: '1000:1000'
+  - path: media/downloads
+    shared: true
+    owner: '1000:1000'
+
+compose:
+  services:
+    sonarr:
+      image: lscr.io/linuxserver/sonarr:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:8989'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/config:/config
+        - ${DOCK_MEDIA_DIR}/shows:/tv
+        - ${DOCK_MEDIA_DIR}/downloads:/downloads
+      environment:
+        PUID: ${DOCK_PUID}
+        PGID: ${DOCK_PGID}
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    В настройках download client укажите qbittorrent:
+    хост http://qbittorrent, порт 8080 (если меняли порт веб-морды
+    qbittorrent — свой), логин admin и его пароль.
+
+    Корни: /tv → ${DOCK_MEDIA_DIR}/shows,
+    /downloads → ${DOCK_MEDIA_DIR}/downloads.

@@ -178,3 +178,11 @@ stacks:
     meta: '// 250 MB · 1 контейнер'
     path: stacks/radarr
 
+  - id: sonarr
+    name: sonarr
+    version: 1.0.0
+    category: медиа
+    summary: То же, что radarr, но для сериалов: сезоны, серии, озвучка.
+    meta: '// 250 MB · 1 контейнер'
+    path: stacks/sonarr
+
