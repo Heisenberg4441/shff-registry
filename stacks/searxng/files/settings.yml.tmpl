@@ -1,0 +1,14 @@
+# Базовые настройки searxng. Секретный ключ подставляется при установке,
+# лимитер выключен, чтобы не требовать дополнительных файлов с правилами.
+use_default_settings: true
+
+server:
+  secret_key: "${SECRET_KEY}"
+  limiter: false
+  image_proxy: true
+
+ui:
+  static_use_hash: true
+
+general:
+  instance_name: "SearXNG"
