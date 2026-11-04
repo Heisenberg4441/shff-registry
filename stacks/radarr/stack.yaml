@@ -1,0 +1,78 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: radarr
+name: radarr
+version: 1.0.0
+category: медиа
+summary: Следит за выходом фильмов и скачивает их сам, с постерами и метаданными.
+meta: '// 250 MB · 1 контейнер'
+homepage: https://radarr.video
+
+description: |
+  Менеджер фильмов: знает, чего не хватает в библиотеке, следит за
+  релизами и отправляет торрент в qbittorrent.
+
+  Пишет в общую медиатеку — туда же смотрит jellyfin, так что новый
+  фильм появляется в медиасервере сразу после скачивания.
+
+primary: radarr
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 7878
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: films
+
+volumes:
+  - path: data/config
+
+  # Общая медиатека: не удаляется вместе со стеком.
+  - path: media/films
+    shared: true
+    owner: '1000:1000'
+  - path: media/downloads
+    shared: true
+    owner: '1000:1000'
+
+compose:
+  services:
+    radarr:
+      image: lscr.io/linuxserver/radarr:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:7878'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/config:/config
+        - ${DOCK_MEDIA_DIR}/films:/movies
+        - ${DOCK_MEDIA_DIR}/downloads:/downloads
+      environment:
+        PUID: ${DOCK_PUID}
+        PGID: ${DOCK_PGID}
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    В настройках download client укажите qbittorrent:
+    хост http://qbittorrent, порт 8080 (если меняли порт веб-морды
+    qbittorrent — свой), логин admin и его пароль.
+
+    Корни: /movies → ${DOCK_MEDIA_DIR}/films,
+    /downloads → ${DOCK_MEDIA_DIR}/downloads.
+
+    Индексаторы удобнее заводить через prowlarr, а не по одному.

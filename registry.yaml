@@ -170,3 +170,11 @@ stacks:
     meta: '// 300 MB · 1 контейнер'
     path: stacks/komga
 
+  - id: radarr
+    name: radarr
+    version: 1.0.0
+    category: медиа
+    summary: Следит за выходом фильмов и скачивает их сам, с постерами и метаданными.
+    meta: '// 250 MB · 1 контейнер'
+    path: stacks/radarr
+
