@@ -1,0 +1,49 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: it-tools
+name: it-tools
+version: 1.0.0
+category: инструменты
+summary: Набор инструментов разработчика в одном окне: форматтеры, кодеры, генераторы.
+meta: '// 50 MB · 1 контейнер'
+homepage: https://it-tools.tech
+
+description: |
+  Одностраничник с инструментами: json/yaml-конвертеры, base64, хэши,
+  генераторы паролей, cron-разборщик и ещё пара десятков. Всё работает
+  локально в браузере.
+
+primary: it-tools
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8286
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: tools
+
+compose:
+  services:
+    it-tools:
+      image: corentinth/it-tools:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:80'
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: 'Инструменты с меткой «favorite» можно закрепить наверху меню.'

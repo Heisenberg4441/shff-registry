@@ -266,3 +266,11 @@ stacks:
     meta: '// 40 MB · 1 контейнер'
     path: stacks/excalidraw
 
+  - id: it-tools
+    name: it-tools
+    version: 1.0.0
+    category: инструменты
+    summary: Набор инструментов разработчика в одном окне: форматтеры, кодеры, генераторы.
+    meta: '// 50 MB · 1 контейнер'
+    path: stacks/it-tools
+
