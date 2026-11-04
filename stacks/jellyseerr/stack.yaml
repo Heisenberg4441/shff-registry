@@ -1,0 +1,61 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: jellyseerr
+name: jellyseerr
+version: 1.0.0
+category: медиа
+summary: Заявки на фильмы и сериалы из веба или телеграма — прямо в radarr и sonarr.
+meta: '// 250 MB · 1 контейнер'
+homepage: https://github.com/fallenbagel/jellyseerr
+
+description: |
+  Окно «заказа» для домашних: ищут фильм, жмут «запросить» — дальше
+  radarr или sonarr качают сами, а заявившему приходит уведомление.
+
+  Работает в паре с jellyfin: видит, что уже есть в библиотеке, и
+  подсвечивает доступное.
+
+primary: jellyseerr
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 5055
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: requests
+
+volumes:
+  - path: data/config
+
+compose:
+  services:
+    jellyseerr:
+      image: fallenbagel/jellyseerr:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:5055'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/config:/app/config
+      environment:
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    В настройках подключите jellyfin: адрес http://jellyfin:8096
+    (если меняли порт jellyfin — свой) и API-ключ из настроек jellyfin.
+    Радарр и сонарр заводятся на http://radarr:7878 и http://sonarr:8989.

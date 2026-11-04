@@ -202,3 +202,11 @@ stacks:
     meta: '// 300 MB · 1 контейнер'
     path: stacks/bazarr
 
+  - id: jellyseerr
+    name: jellyseerr
+    version: 1.0.0
+    category: медиа
+    summary: Заявки на фильмы и сериалы из веба или телеграма — прямо в radarr и sonarr.
+    meta: '// 250 MB · 1 контейнер'
+    path: stacks/jellyseerr
+
