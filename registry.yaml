@@ -314,3 +314,11 @@ stacks:
     meta: '// 150 MB · 1 контейнер'
     path: stacks/homepage
 
+  - id: portainer
+    name: portainer
+    version: 1.0.0
+    category: инструменты
+    summary: Управление докером через веб: контейнеры, образы, тома, логи.
+    meta: '// 150 MB · 1 контейнер'
+    path: stacks/portainer
+

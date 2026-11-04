@@ -1,0 +1,56 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: portainer
+name: portainer
+version: 1.0.0
+category: инструменты
+summary: Управление докером через веб: контейнеры, образы, тома, логи.
+meta: '// 150 MB · 1 контейнер'
+homepage: https://www.portainer.io
+
+description: |
+  Веб-морда к докеру хоста: список контейнеров с логами и консолью,
+  образы, тома, сети. Удобна, когда консоли под рукой нет.
+
+  Просит docker-сокет — то есть полный доступ к контейнерам хоста.
+  Это осознанная замена консоли, а не сервис для гостей.
+
+primary: portainer
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 9000
+    hostPort: true
+    required: true
+
+volumes:
+  - path: data/data
+
+compose:
+  services:
+    portainer:
+      image: portainer/portainer-ce:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:9000'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/data:/data
+        - /var/run/docker.sock:/var/run/docker.sock
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    При первом входе задаётся пароль администратора (минимум 12 символов)
+    и выбирается локальное окружение — оно подцепится само.
+
+    Стеки панели portainer увидит тоже: они обычные compose-проекты.
