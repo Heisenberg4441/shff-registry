@@ -1,0 +1,62 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: memos
+name: memos
+version: 1.0.0
+category: личное
+summary: Короткие заметки-твиты с тегами, вложениями и поиском.
+meta: '// 100 MB · 1 контейнер'
+homepage: https://usememos.com
+
+description: |
+  Лента заметок с markdown-тегами и картинками: как твиттер, но только
+  для себя. Поиск по тексту и тегам, экспорт в markdown.
+
+  База — один файл sqlite внутри каталога стека.
+
+primary: memos
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 5230
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: memos
+
+volumes:
+  - path: data/data
+
+compose:
+  services:
+    memos:
+      image: ghcr.io/usememos/memos:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:5230'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/data:/var/opt/memos
+      environment:
+        MEMOS_MODE: prod
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Первый зашедший заводит аккаунт администратора. Дальше пишите
+    заметки, тег — это #слово прямо в тексте.
+
+    Приложение memos для телефона подключается этим же адресом.

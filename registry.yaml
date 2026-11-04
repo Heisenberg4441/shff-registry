@@ -242,3 +242,11 @@ stacks:
     meta: '// 800 MB · 3 контейнера'
     path: stacks/karakeep
 
+  - id: memos
+    name: memos
+    version: 1.0.0
+    category: личное
+    summary: Короткие заметки-твиты с тегами, вложениями и поиском.
+    meta: '// 100 MB · 1 контейнер'
+    path: stacks/memos
+
