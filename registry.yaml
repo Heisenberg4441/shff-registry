@@ -8,7 +8,7 @@
 apiVersion: dock/v1
 kind: Registry
 name: SHFF stacks
-updated: 2026-08-01
+updated: 2026-11-04
 
 stacks:
   - id: observability
