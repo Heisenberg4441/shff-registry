@@ -1,0 +1,67 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: syncthing
+name: syncthing
+version: 1.0.0
+category: данные
+summary: Синхронизация файлов между устройствами без облака: свой dropbox.
+meta: '// 200 MB · 1 контейнер'
+homepage: https://syncthing.net
+
+description: |
+  Файлы копируются напрямую между вашими устройствами, без
+  промежуточного сервера. Этот контейнер — узел, который всегда
+  онлайн и держит актуальную копию.
+
+  Что синхронизировать — решаете папками: телефон ↔ сервер, ноутбук
+  ↔ сервер и так далее.
+
+primary: syncthing
+
+inputs:
+  - key: PORT
+    label: Порт веб-интерфейса
+    type: port
+    default: 8384
+    hostPort: true
+    required: true
+
+volumes:
+  - path: data/config
+  - path: data/data
+
+compose:
+  services:
+    syncthing:
+      image: lscr.io/linuxserver/syncthing:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:8384'
+        - '22000:22000/tcp'
+        - '22000:22000/udp'
+        - '21027:21027/udp'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/config:/config
+        - ${DOCK_STACK_DIR}/data/data:/data
+      environment:
+        PUID: ${DOCK_PUID}
+        PGID: ${DOCK_PGID}
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    При первом входе задаётся логин и пароль gui — панель предложит
+    сама.
+
+    Порты 22000 и 21027 уже опубликованы — для связи с устройствами
+    вне дома пробросьте 22000/tcp на роутере. Папки для синхронизации
+    создавайте внутри ${DOCK_STACK_DIR}/data/data.

@@ -386,3 +386,11 @@ stacks:
     meta: '// 300 MB · 1 контейнер'
     path: stacks/searxng
 
+  - id: syncthing
+    name: syncthing
+    version: 1.0.0
+    category: данные
+    summary: Синхронизация файлов между устройствами без облака: свой dropbox.
+    meta: '// 200 MB · 1 контейнер'
+    path: stacks/syncthing
+
