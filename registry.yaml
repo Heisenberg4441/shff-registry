@@ -410,3 +410,11 @@ stacks:
     meta: '// 500 MB · 1 контейнер'
     path: stacks/mealie
 
+  - id: vikunja
+    name: vikunja
+    version: 1.0.0
+    category: личное
+    summary: Задачи и проекты: доски канбан, списки, дедлайны и напоминания.
+    meta: '// 100 MB · 1 контейнер'
+    path: stacks/vikunja
+

@@ -1,0 +1,66 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: vikunja
+name: vikunja
+version: 1.0.0
+category: личное
+summary: Задачи и проекты: доски канбан, списки, дедлайны и напоминания.
+meta: '// 100 MB · 1 контейнер'
+homepage: https://vikunja.io
+
+description: |
+  Планировщик дел: проекты с досками, списками или таблицами, дедлайны,
+  повторяющиеся задачи, общие списки с близкими.
+
+  База — sqlite внутри каталога стека, отдельный сервер не нужен.
+
+primary: vikunja
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 3456
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: tasks
+
+volumes:
+  - path: data/files
+
+compose:
+  services:
+    vikunja:
+      image: vikunja/vikunja:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:3456'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/files:/app/vikunja/files
+      environment:
+        VIKUNJA_SERVICE_PUBLICURL: http://${DOCK_HOSTNAME}:${PORT}
+        VIKUNJA_DATABASE_TYPE: sqlite
+        VIKUNJA_DATABASE_PATH: /app/vikunja/files/vikunja.db
+        VIKUNJA_SERVICE_ENABLEREGISTRATION: 'false'
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    При первом входе нажмите «Register» и заведите аккаунт — после
+    него регистрация закрыта.
+
+    Мобильное приложение и календарь (caldav) подключаются этим же
+    адресом.
