@@ -218,3 +218,11 @@ stacks:
     meta: '// 120 MB · 1 контейнер'
     path: stacks/freshrss
 
+  - id: wallabag
+    name: wallabag
+    version: 1.0.0
+    category: чтение
+    summary: «Прочитать позже»: сохраняет статьи чистым текстом без рекламы.
+    meta: '// 300 MB · 1 контейнер'
+    path: stacks/wallabag
+
