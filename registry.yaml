@@ -234,3 +234,11 @@ stacks:
     meta: '// 200 MB · 1 контейнер'
     path: stacks/linkding
 
+  - id: karakeep
+    name: karakeep
+    version: 1.0.0
+    category: чтение
+    summary: Сохраняет ссылки, картинки и заметки, сам раскладывает по тегам.
+    meta: '// 800 MB · 3 контейнера'
+    path: stacks/karakeep
+

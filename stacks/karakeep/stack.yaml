@@ -1,0 +1,118 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: karakeep
+name: karakeep
+version: 1.0.0
+category: чтение
+summary: Сохраняет ссылки, картинки и заметки, сам раскладывает по тегам.
+meta: '// 800 MB · 3 контейнера'
+homepage: https://karakeep.app
+
+description: |
+  Вторая память: кинул ссылку, скриншот или заметку — сервис скачал
+  страницу, распознал содержимое и разложил по тегам. Ищется потом
+  по тексту сохранённых страниц.
+
+  Рядом поднимаются meilisearch для поиска и отдельный chrome для
+  скачивания страниц — поэтому стек не из лёгких.
+
+requires:
+  memoryMiB: 1024
+
+primary: karakeep
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8283
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: keep
+
+  - key: SECRET
+    label: Секрет сессий
+    type: secret
+    generate: hex32
+    hint: '// оставь пустым — сгенерирую'
+
+  - key: MEILI_MASTER_KEY
+    label: Ключ поискового движка
+    type: secret
+    generate: password
+    hint: '// оставь пустым — сгенерирую'
+
+volumes:
+  - path: data/data
+  - path: data/meili
+
+compose:
+  services:
+    karakeep:
+      image: ghcr.io/karakeep-app/karakeep:latest
+      restart: unless-stopped
+      depends_on:
+        - meilisearch
+        - chrome
+      networks:
+        - default
+        - backend
+      ports:
+        - '${PORT}:3000'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/data:/data
+      environment:
+        DATA_DIR: /data
+        NEXTAUTH_SECRET: ${SECRET}
+        NEXTAUTH_URL: http://${DOCK_HOSTNAME}:${PORT}
+        MEILI_ADDR: http://meilisearch:7700
+        MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+        BROWSER_WEBSOCKET_URL: ws://chrome:9222
+        DISABLE_SIGNUPS: 'true'
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+
+    meilisearch:
+      image: getmeili/meilisearch:v1.12
+      restart: unless-stopped
+      networks:
+        - backend
+      volumes:
+        - ${DOCK_STACK_DIR}/data/meili:/meili_data
+      environment:
+        MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+        MEILI_NO_ANALYTICS: 'true'
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+
+    chrome:
+      image: ghcr.io/karakeep-app/karakeep-chrome:latest
+      restart: unless-stopped
+      networks:
+        - backend
+      environment:
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+    backend: {}
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Откройте адрес и заведите первого пользователя — он становится
+    администратором, регистрация остальных закрыта.
+
+    Быстро сохранять: расширение karakeep для браузера, телеграм-бот
+    или делитесь ссылкой в меню «поделиться» на телефоне.
