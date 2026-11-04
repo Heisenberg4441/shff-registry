@@ -282,3 +282,11 @@ stacks:
     meta: '// 500 MB · 1 контейнер'
     path: stacks/stirling-pdf
 
+  - id: n8n
+    name: n8n
+    version: 1.0.0
+    category: автоматизация
+    summary: Конструктор интеграций: webhook'и, API, расписания без кода.
+    meta: '// 500 MB · 1 контейнер'
+    path: stacks/n8n
+

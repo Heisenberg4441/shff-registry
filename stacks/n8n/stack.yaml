@@ -1,0 +1,73 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: n8n
+name: n8n
+version: 1.0.0
+category: автоматизация
+summary: Конструктор интеграций: webhook'и, API, расписания без кода.
+meta: '// 500 MB · 1 контейнер'
+homepage: https://n8n.io
+
+description: |
+  Соединяет сервисы друг с другом: «письмо → заметка», «вебхук →
+  телеграм», «по расписанию → отчёт». Редактор потоков в браузере,
+  сотни готовых интеграций плюс произвольные HTTP-запросы.
+
+  Данные лежат в sqlite внутри каталога стека.
+
+primary: n8n
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 5678
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: flows
+
+  - key: ENCRYPTION_KEY
+    label: Ключ шифрования данных
+    type: secret
+    generate: password
+    hint: '// оставь пустым — сгенерирую. Потерял — расшифровать credentials не выйдет'
+
+volumes:
+  - path: data/data
+    owner: '1000:1000'
+
+compose:
+  services:
+    n8n:
+      image: n8nio/n8n:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:5678'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/data:/home/node/.n8n
+      environment:
+        N8N_ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+        N8N_SECURE_COOKIE: 'false'
+        GENERIC_TIMEZONE: ${DOCK_TZ}
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    При первом входе заведите владельца (owner) — это главный аккаунт.
+
+    N8N_SECURE_COOKIE выключен, потому что сервис открывается по http.
+    Поставите https через прокси — верните cookie: переменная
+    N8N_SECURE_COOKIE=true в настройках стека.
