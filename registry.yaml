@@ -138,3 +138,11 @@ stacks:
     meta: '// 600 MB · 1 контейнер'
     path: stacks/home-assistant
 
+  - id: immich
+    name: immich
+    version: 1.0.0
+    category: фото
+    summary: Бэкап фото и видео с телефона с распознаванием лиц, поиском и общими альбомами.
+    meta: '// 2 GB · 3 контейнера'
+    path: stacks/immich
+

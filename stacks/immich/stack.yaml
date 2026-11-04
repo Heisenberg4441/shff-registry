@@ -1,0 +1,119 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: immich
+name: immich
+version: 1.0.0
+category: фото
+summary: Бэкап фото и видео с телефона с распознаванием лиц, поиском и общими альбомами.
+meta: '// 2 GB · 3 контейнера'
+homepage: https://immich.app
+
+description: |
+  Свой Google Фото: приложение на телефон выгружает кадры сюда, дальше
+  работают поиск по содержимому, лица, карта и альбомы.
+
+  Тяжёлый: просит от 2 ГБ памяти на старт. Рядом поднимаются postgres
+  с pgvector и redis — снаружи они не видны, живут в своей сети стека.
+
+requires:
+  memoryMiB: 2048
+
+primary: immich-server
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8211
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: photos
+
+  - key: DB_PASSWORD
+    label: Пароль базы
+    type: secret
+    generate: password
+    hint: '// нужен только контейнерам стека'
+
+volumes:
+  - path: data/upload
+    owner: '1000:1000'
+  - path: data/pgdata
+  - path: data/redis
+
+compose:
+  services:
+    immich-server:
+      image: ghcr.io/immich-app/immich-server:release
+      restart: unless-stopped
+      depends_on:
+        immich-db:
+          condition: service_healthy
+        immich-redis:
+          condition: service_started
+      networks:
+        - default
+        - backend
+      ports:
+        - '${PORT}:2283'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/upload:/data/upload
+      environment:
+        TZ: ${DOCK_TZ}
+        DB_HOSTNAME: immich-db
+        DB_USERNAME: immich
+        DB_PASSWORD: ${DB_PASSWORD}
+        DB_DATABASE_NAME: immich
+        REDIS_HOSTNAME: immich-redis
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+
+    immich-db:
+      image: pgvector/pgvector:pg16
+      restart: unless-stopped
+      networks:
+        - backend
+      volumes:
+        - ${DOCK_STACK_DIR}/data/pgdata:/var/lib/postgresql/data
+      environment:
+        POSTGRES_USER: immich
+        POSTGRES_PASSWORD: ${DB_PASSWORD}
+        POSTGRES_DB: immich
+      healthcheck:
+        test: ['CMD-SHELL', 'pg_isready -U immich -d immich']
+        interval: 5s
+        timeout: 5s
+        retries: 20
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+
+    immich-redis:
+      image: redis:7-alpine
+      restart: unless-stopped
+      networks:
+        - backend
+      volumes:
+        - ${DOCK_STACK_DIR}/data/redis:/data
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+    backend: {}
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Откройте адрес, заведите администратора и поставьте приложение immich
+    на телефон: сервер в приложении — http://${DOCK_HOSTNAME}:${PORT}.
+
+    Первое распознавание лиц и объектов идёт фоном и жрёт процессор:
+    пару часов на большой библиотеке — норма.
