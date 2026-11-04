@@ -346,3 +346,11 @@ stacks:
     meta: '// 200 MB · 1 контейнер'
     path: stacks/scrutiny
 
+  - id: dozzle
+    name: dozzle
+    version: 1.0.0
+    category: мониторинг
+    summary: Журналы всех контейнеров одним списком в браузере.
+    meta: '// 50 MB · 1 контейнер'
+    path: stacks/dozzle
+

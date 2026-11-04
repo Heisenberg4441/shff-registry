@@ -1,0 +1,51 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: dozzle
+name: dozzle
+version: 1.0.0
+category: мониторинг
+summary: Журналы всех контейнеров одним списком в браузере.
+meta: '// 50 MB · 1 контейнер'
+homepage: https://dozzle.dev
+
+description: |
+  Открываешь — и сразу видишь логи всех контейнеров хоста с возможностью
+  поиска и фильтров. Ничего не хранит, читает docker-сокет в реальном
+  времени.
+
+  Сокет смонтирован только на чтение.
+
+primary: dozzle
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8288
+    hostPort: true
+    required: true
+
+compose:
+  services:
+    dozzle:
+      image: amir20/dozzle:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:8080'
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:ro
+      environment:
+        DOZZLE_NO_ANALYTICS: 'true'
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: 'Поиск по логам работает на английском без учёта регистра; разделитель — пробел.'
