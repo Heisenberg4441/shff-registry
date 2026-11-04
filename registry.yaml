@@ -130,6 +130,7 @@ stacks:
     summary: Своё облако для файлов, календаря и контактов, с клиентами для компьютера и телефона. Приезжает с postgres, redis и фоновыми задачами.
     meta: '// 650 MB · 4 контейнера'
     path: stacks/nextcloud
+
   - id: home-assistant
     name: home-assistant
     version: 1.0.0
@@ -442,3 +443,10 @@ stacks:
     meta: '// 1 GB · 1 контейнер'
     path: stacks/ollama
 
+  - id: open-webui
+    name: open-webui
+    version: 1.0.0
+    category: ИИ
+    summary: Чат-интерфейс к ollama: как chatgpt, но на своём сервере и своих моделях.
+    meta: '// 1 GB · 1 контейнер'
+    path: stacks/open-webui

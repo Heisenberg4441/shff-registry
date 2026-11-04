@@ -1,0 +1,82 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: open-webui
+name: open-webui
+version: 1.0.0
+category: ИИ
+summary: Чат-интерфейс к ollama: как chatgpt, но на своём сервере и своих моделях.
+meta: '// 1 GB · 1 контейнер'
+homepage: https://openwebui.com
+
+description: |
+  Красивый чат поверх ollama (или любого openai-совместимого api):
+  история диалогов, загрузка файлов, поиск по документам, несколько
+  моделей в одном окне.
+
+  Если стек ollama уже стоит, подключение прописано заранее — адрес
+  его api виден по имени сервиса в общей сети.
+
+requires:
+  memoryMiB: 1024
+
+primary: open-webui
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8380
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: chat
+
+  - key: WEBUI_SECRET_KEY
+    label: Секрет сессий
+    type: secret
+    generate: hex32
+    hint: '// оставь пустым — сгенерирую'
+
+  - key: OLLAMA_BASE_URL
+    label: Адрес API ollama
+    type: string
+    default: http://ollama:11434
+    hint: '// именно так виден стек ollama из соседних стеков'
+
+volumes:
+  - path: data/data
+
+compose:
+  services:
+    open-webui:
+      image: ghcr.io/open-webui/open-webui:main
+      restart: unless-stopped
+      ports:
+        - '${PORT}:8080'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/data:/app/backend/data
+      environment:
+        OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
+        WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Первый зашедший становится администратором. Дальше: выберите
+    модель слева вверху — если ollama ещё не скачал ни одной,
+    скачайте прямо из настроек open-webui (Admin → Settings → Models).
+
+    Если ollama не стоит, интерфейс всё равно поднимется — укажите
+    другой адрес api в настройках стека.
