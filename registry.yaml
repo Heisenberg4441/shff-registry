@@ -298,3 +298,11 @@ stacks:
     meta: '// 300 MB · 1 контейнер'
     path: stacks/node-red
 
+  - id: changedetection
+    name: changedetection
+    version: 1.0.0
+    category: автоматизация
+    summary: Следит за изменениями на страницах и шлёт уведомления, когда что-то изменилось.
+    meta: '// 300 MB · 1 контейнер'
+    path: stacks/changedetection
+
