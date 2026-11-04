@@ -394,3 +394,11 @@ stacks:
     meta: '// 200 MB · 1 контейнер'
     path: stacks/syncthing
 
+  - id: duplicati
+    name: duplicati
+    version: 1.0.0
+    category: данные
+    summary: Бэкапы каталогов на удалённые хранилища по расписанию с шифрованием.
+    meta: '// 300 MB · 1 контейнер'
+    path: stacks/duplicati
+
