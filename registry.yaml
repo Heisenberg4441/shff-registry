@@ -250,3 +250,11 @@ stacks:
     meta: '// 100 MB · 1 контейнер'
     path: stacks/memos
 
+  - id: bookstack
+    name: bookstack
+    version: 1.0.0
+    category: инструменты
+    summary: База знаний: книги, главы и страницы с поиском и правами.
+    meta: '// 400 MB · 2 контейнера'
+    path: stacks/bookstack
+

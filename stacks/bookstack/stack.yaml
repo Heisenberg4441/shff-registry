@@ -1,0 +1,109 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: bookstack
+name: bookstack
+version: 1.0.0
+category: инструменты
+summary: База знаний: книги, главы и страницы с поиском и правами.
+meta: '// 400 MB · 2 контейнера'
+homepage: https://www.bookstackapp.com
+
+description: |
+  Вики для дома и команды: структура «книги → главы → страницы»,
+  поиск по тексту, картинки вставляются drag-and-drop.
+
+  База — mysql в отдельном контейнере, в общей сети стека её не видно.
+
+primary: bookstack
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8284
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: wiki
+
+  - key: DB_ROOT_PASSWORD
+    label: Пароль root базы
+    type: secret
+    generate: password
+    hint: '// нужен только контейнерам стека'
+
+  - key: DB_PASSWORD
+    label: Пароль базы
+    type: secret
+    generate: password
+    hint: '// нужен только контейнерам стека'
+
+volumes:
+  - path: data/config
+  - path: data/db
+
+compose:
+  services:
+    bookstack:
+      image: lscr.io/linuxserver/bookstack:latest
+      restart: unless-stopped
+      depends_on:
+        bookstack-db:
+          condition: service_healthy
+      networks:
+        - default
+        - backend
+      ports:
+        - '${PORT}:80'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/config:/config
+      environment:
+        PUID: ${DOCK_PUID}
+        PGID: ${DOCK_PGID}
+        TZ: ${DOCK_TZ}
+        APP_URL: http://${DOCK_HOSTNAME}:${PORT}
+        DB_HOST: bookstack-db
+        DB_USER: bookstack
+        DB_PASS: ${DB_PASSWORD}
+        DB_DATABASE: bookstack
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+
+    bookstack-db:
+      image: mysql:8.4
+      restart: unless-stopped
+      networks:
+        - backend
+      volumes:
+        - ${DOCK_STACK_DIR}/data/db:/var/lib/mysql
+      environment:
+        MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+        MYSQL_DATABASE: bookstack
+        MYSQL_USER: bookstack
+        MYSQL_PASSWORD: ${DB_PASSWORD}
+      healthcheck:
+        test: ['CMD-SHELL', 'mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}']
+        interval: 5s
+        timeout: 5s
+        retries: 20
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+    backend: {}
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Логин по умолчанию: admin@admin.com / password — смените сразу.
+
+    Права доступа настраиваются по ролям: можно открыть часть книг
+    гостям, а остальное оставить под учёткой.
