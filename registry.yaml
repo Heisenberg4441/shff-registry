@@ -186,3 +186,11 @@ stacks:
     meta: '// 250 MB · 1 контейнер'
     path: stacks/sonarr
 
+  - id: prowlarr
+    name: prowlarr
+    version: 1.0.0
+    category: медиа
+    summary: Управляет индексаторами для radarr и sonarr из одного места.
+    meta: '// 200 MB · 1 контейнер'
+    path: stacks/prowlarr
+

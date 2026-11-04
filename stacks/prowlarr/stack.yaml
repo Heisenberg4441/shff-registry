@@ -1,0 +1,62 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: prowlarr
+name: prowlarr
+version: 1.0.0
+category: медиа
+summary: Управляет индексаторами для radarr и sonarr из одного места.
+meta: '// 200 MB · 1 контейнер'
+homepage: https://prowlarr.com
+
+description: |
+  Один список торрент-трекеров вместо заведения их по отдельности
+  в каждом менеджере. Подключил prowlarr к radarr и sonarr — оба сразу
+  видят все индексаторы.
+
+primary: prowlarr
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 9696
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: indexers
+
+volumes:
+  - path: data/config
+
+compose:
+  services:
+    prowlarr:
+      image: lscr.io/linuxserver/prowlarr:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:9696'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/config:/config
+      environment:
+        PUID: ${DOCK_PUID}
+        PGID: ${DOCK_PGID}
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Добавьте индексаторы (Apps → добавить трекер), затем подключите
+    приложения: radarr и sonarr видны по именам сервисов
+    http://radarr:7878 и http://sonarr:8989 — синхронизация настроек
+    пойдёт сама.
