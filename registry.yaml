@@ -354,3 +354,11 @@ stacks:
     meta: '// 50 MB · 1 контейнер'
     path: stacks/dozzle
 
+  - id: speedtest-tracker
+    name: speedtest-tracker
+    version: 1.0.0
+    category: мониторинг
+    summary: Регулярно меряет скорость канала и рисует графики по истории.
+    meta: '// 200 MB · 1 контейнер'
+    path: stacks/speedtest-tracker
+

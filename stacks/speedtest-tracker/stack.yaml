@@ -1,0 +1,85 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: speedtest-tracker
+name: speedtest-tracker
+version: 1.0.0
+category: мониторинг
+summary: Регулярно меряет скорость канала и рисует графики по истории.
+meta: '// 200 MB · 1 контейнер'
+homepage: https://github.com/alexjustesen/speedtest-tracker
+
+description: |
+  Раз в заданный интервал гоняет speedtest и копит результат: графики
+  скорости и пинга, пороговые уведомления «канал просел».
+
+  Данные хранятся в sqlite, отдельная база не нужна.
+
+primary: speedtest-tracker
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8289
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: speed
+
+  - key: ADMIN_EMAIL
+    label: Email администратора
+    type: string
+    default: admin@example.com
+
+  - key: ADMIN_PASSWORD
+    label: Пароль администратора
+    type: secret
+    generate: password
+
+  - key: APP_KEY
+    label: Ключ приложения
+    type: secret
+    generate: base64
+    hint: '// оставь пустым — сгенерирую'
+
+volumes:
+  - path: data/config
+
+compose:
+  services:
+    speedtest-tracker:
+      image: lscr.io/linuxserver/speedtest-tracker:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:80'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/config:/config
+      environment:
+        PUID: ${DOCK_PUID}
+        PGID: ${DOCK_PGID}
+        TZ: ${DOCK_TZ}
+        APP_KEY: ${APP_KEY}
+        APP_URL: http://${DOCK_HOSTNAME}:${PORT}
+        ADMIN_EMAIL: ${ADMIN_EMAIL}
+        ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+        DB_CONNECTION: sqlite
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Логин: ${ADMIN_EMAIL}
+    Пароль: ${ADMIN_PASSWORD}
+
+    Интервал замеров задаётся в настройках приложения. Первый замер
+    пройдёт сам через минуту после старта.
