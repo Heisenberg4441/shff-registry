@@ -418,3 +418,11 @@ stacks:
     meta: '// 100 MB · 1 контейнер'
     path: stacks/vikunja
 
+  - id: firefly-iii
+    name: firefly-iii
+    version: 1.0.0
+    category: финансы
+    summary: Личный учёт денег: счета, категории, бюджеты, отчёты.
+    meta: '// 400 MB · 2 контейнера'
+    path: stacks/firefly-iii
+

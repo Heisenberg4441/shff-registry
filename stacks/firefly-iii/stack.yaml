@@ -1,0 +1,116 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: firefly-iii
+name: firefly-iii
+version: 1.0.0
+category: финансы
+summary: Личный учёт денег: счета, категории, бюджеты, отчёты.
+meta: '// 400 MB · 2 контейнера'
+homepage: https://www.firefly-iii.org
+
+description: |
+  Двойная бухгалтерия для семьи: счета, переводы, категории,
+  бюджеты на месяц и отчёты «куда уходит». Импортирует выгрузки
+  из банков csv.
+
+  Рядом поднимается postgres в отдельной сети стека, снаружи она
+  не видна.
+
+requires:
+  memoryMiB: 512
+
+primary: firefly
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8295
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: money
+
+  - key: APP_KEY
+    label: Ключ приложения
+    type: secret
+    generate: base64
+    hint: '// оставь пустым — сгенерирую'
+
+  - key: DB_PASSWORD
+    label: Пароль базы
+    type: secret
+    generate: password
+    hint: '// нужен только контейнерам стека'
+
+volumes:
+  - path: data/upload
+  - path: data/db
+
+compose:
+  services:
+    firefly:
+      image: fireflyiii/core:latest
+      restart: unless-stopped
+      depends_on:
+        firefly-db:
+          condition: service_healthy
+      networks:
+        - default
+        - backend
+      ports:
+        - '${PORT}:8080'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/upload:/var/www/html/storage/upload
+      environment:
+        APP_KEY: ${APP_KEY}
+        APP_URL: http://${DOCK_HOSTNAME}:${PORT}
+        TRUSTED_PROXIES: '**'
+        DB_CONNECTION: pgsql
+        DB_HOST: firefly-db
+        DB_PORT: '5432'
+        DB_DATABASE: firefly
+        DB_USERNAME: firefly
+        DB_PASSWORD: ${DB_PASSWORD}
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+
+    firefly-db:
+      image: postgres:16-alpine
+      restart: unless-stopped
+      networks:
+        - backend
+      volumes:
+        - ${DOCK_STACK_DIR}/data/db:/var/lib/postgresql/data
+      environment:
+        POSTGRES_USER: firefly
+        POSTGRES_PASSWORD: ${DB_PASSWORD}
+        POSTGRES_DB: firefly
+      healthcheck:
+        test: ['CMD-SHELL', 'pg_isready -U firefly -d firefly']
+        interval: 5s
+        timeout: 5s
+        retries: 20
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+    backend: {}
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    При первом входе регистрация открыта — создайте аккаунт сразу,
+    регистрацию потом закройте в настройках.
+
+    Импорт банковских выписок: Data → Import, csv подхватывается
+    с присвоением колонок.
