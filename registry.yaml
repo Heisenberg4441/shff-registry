@@ -274,3 +274,11 @@ stacks:
     meta: '// 50 MB · 1 контейнер'
     path: stacks/it-tools
 
+  - id: stirling-pdf
+    name: stirling-pdf
+    version: 1.0.0
+    category: инструменты
+    summary: Ножницы для PDF: режет, склеивает, поворачивает, конвертирует, ставит печати.
+    meta: '// 500 MB · 1 контейнер'
+    path: stacks/stirling-pdf
+
