@@ -210,3 +210,11 @@ stacks:
     meta: '// 250 MB · 1 контейнер'
     path: stacks/jellyseerr
 
+  - id: freshrss
+    name: freshrss
+    version: 1.0.0
+    category: чтение
+    summary: RSS-ридер с веб-мордой и API для мобильных клиентов.
+    meta: '// 120 MB · 1 контейнер'
+    path: stacks/freshrss
+

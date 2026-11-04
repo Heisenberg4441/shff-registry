@@ -1,0 +1,62 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: freshrss
+name: freshrss
+version: 1.0.0
+category: чтение
+summary: RSS-ридер с веб-мордой и API для мобильных клиентов.
+meta: '// 120 MB · 1 контейнер'
+homepage: https://freshrss.org
+
+description: |
+  Читает ленты сам, без облачных сервисов. Есть API (Google Reader
+  compatible) — к нему подключаются мобильные клиенты типа Readrops
+  или NetNewsWire.
+
+  Обновление лент идёт по cron внутри образа, ничего настраивать не надо.
+
+primary: freshrss
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8280
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: rss
+
+volumes:
+  - path: data/data
+
+compose:
+  services:
+    freshrss:
+      image: freshrss/freshrss:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:80'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/data:/var/www/FreshRSS/data
+      environment:
+        TZ: ${DOCK_TZ}
+        CRON_MIN: '13,43'
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    При первом входе выберите язык и заведите администратора. Для
+    мобильных клиентов включите API: Настройки → Аутентификация →
+    разрешить доступ по API.
