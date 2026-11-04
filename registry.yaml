@@ -426,3 +426,11 @@ stacks:
     meta: '// 400 MB · 2 контейнера'
     path: stacks/firefly-iii
 
+  - id: gotify
+    name: gotify
+    version: 1.0.0
+    category: уведомления
+    summary: Свой сервер push-уведомлений для скриптов и сервисов.
+    meta: '// 50 MB · 1 контейнер'
+    path: stacks/gotify
+

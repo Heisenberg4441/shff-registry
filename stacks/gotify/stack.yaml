@@ -1,0 +1,83 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: gotify
+name: gotify
+version: 1.0.0
+category: уведомления
+summary: Свой сервер push-уведомлений для скриптов и сервисов.
+meta: '// 50 MB · 1 контейнер'
+homepage: https://gotify.net
+
+description: |
+  Рассылает уведомления телефону из чего угодно: одна команда curl —
+  и сообщение уже на экране. Приложение на телефон держит постоянное
+  соединение, web-интерфейс — для ручных сообщений.
+
+  Удобно как приёмник алертов от мониторингов и автоматизаций внутри
+  каталога.
+
+primary: gotify
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8294
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: push
+
+  - key: ADMIN_USER
+    label: Логин администратора
+    type: string
+    default: admin
+
+  - key: ADMIN_PASSWORD
+    label: Пароль администратора
+    type: secret
+    generate: password
+
+volumes:
+  - path: data/data
+
+compose:
+  services:
+    gotify:
+      image: gotify/server:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:80'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/data:/app/data
+      environment:
+        GOTIFY_DEFAULTUSER_NAME: ${ADMIN_USER}
+        GOTIFY_DEFAULTUSER_PASS: ${ADMIN_PASSWORD}
+        GOTIFY_DEFAULTUSER_ADMIN: 'true'
+        GOTIFY_REGISTRATION: 'false'
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Логин: ${ADMIN_USER}
+    Пароль: ${ADMIN_PASSWORD}
+
+    Приложение gotify на телефон подключается по адресу
+    http://${DOCK_HOSTNAME}:${PORT}. Токен для скриптов заводится
+    в веб-интерфейсе: Apps → создать приложение → token.
+
+    Отправка из скрипта:
+      curl -X POST "http://${DOCK_HOSTNAME}:${PORT}/message?token=ТОКЕН" \
+        -F "title=тема" -F "message=текст"
