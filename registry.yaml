@@ -130,3 +130,11 @@ stacks:
     summary: Своё облако для файлов, календаря и контактов, с клиентами для компьютера и телефона. Приезжает с postgres, redis и фоновыми задачами.
     meta: '// 650 MB · 4 контейнера'
     path: stacks/nextcloud
+  - id: home-assistant
+    name: home-assistant
+    version: 1.0.0
+    category: умный дом
+    summary: Умный дом из коробки: устройства, сценарии, голосовые ассистенты.
+    meta: '// 600 MB · 1 контейнер'
+    path: stacks/home-assistant
+

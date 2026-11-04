@@ -1,0 +1,56 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: home-assistant
+name: home-assistant
+version: 1.0.0
+category: умный дом
+summary: Умный дом из коробки: устройства, сценарии, голосовые ассистенты.
+meta: '// 600 MB · 1 контейнер'
+homepage: https://www.home-assistant.io
+
+description: |
+  Главный центр умного дома. Подхватывает устройства в локальной сети
+  (zigbee/matter/wifi через интеграции), хранит историю состояний и даёт
+  редактор сценариев.
+
+  Конфиг лежит в data/config — бэкапить нужно именно его.
+
+primary: home-assistant
+
+inputs:
+  - key: PORT
+    label: Порт веб-интерфейса
+    type: port
+    default: 8123
+    hostPort: true
+    required: true
+
+volumes:
+  - path: data/config
+
+compose:
+  services:
+    home-assistant:
+      image: ghcr.io/home-assistant/home-assistant:stable
+      restart: unless-stopped
+      ports:
+        - '${PORT}:8123'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/config:/config
+        - /etc/localtime:/etc/localtime:ro
+      environment:
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Первый запуск предложит создать пользователя и выбрать дом/комнаты.
+    Интеграции с устройствами находятся сами при сканировании сети.
