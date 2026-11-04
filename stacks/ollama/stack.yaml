@@ -1,0 +1,62 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: ollama
+name: ollama
+version: 1.0.0
+category: ИИ
+summary: Локальные LLM: API и cli для запуска моделей на своём железе.
+meta: '// 1 GB · 1 контейнер'
+homepage: https://ollama.com
+
+description: |
+  Запускает большие языковые модели локально: один api на всё — сюда
+  подключаются open-webui, скрипты и другие сервисы каталога.
+
+  Модели качаются по имени, место под них — в каталоге стека
+  (могут занять десятки гигабайт). На процессорах без gpu работает,
+  но медленно.
+
+primary: ollama
+
+inputs:
+  - key: PORT
+    label: Порт API
+    type: port
+    default: 11434
+    hostPort: true
+    required: true
+
+volumes:
+  - path: data/ollama
+
+compose:
+  services:
+    ollama:
+      image: ollama/ollama:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:11434'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/ollama:/root/.ollama
+      environment:
+        OLLAMA_HOST: 0.0.0.0
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Список моделей: откройте документацию на ollama.com, первая
+    модель ставится одной командой из журнала контейнера:
+      ollama pull llama3.2
+
+    API живёт на http://${DOCK_HOSTNAME}:${PORT}. Соседние стеки
+    внутри сети ходят на http://ollama:11434 — например, open-webui
+    подключится сам, если указать этот адрес.

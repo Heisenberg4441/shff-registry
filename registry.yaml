@@ -434,3 +434,11 @@ stacks:
     meta: '// 50 MB · 1 контейнер'
     path: stacks/gotify
 
+  - id: ollama
+    name: ollama
+    version: 1.0.0
+    category: ИИ
+    summary: Локальные LLM: API и cli для запуска моделей на своём железе.
+    meta: '// 1 GB · 1 контейнер'
+    path: stacks/ollama
+
