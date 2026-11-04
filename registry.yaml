@@ -362,3 +362,11 @@ stacks:
     meta: '// 200 MB · 1 контейнер'
     path: stacks/speedtest-tracker
 
+  - id: wg-easy
+    name: wg-easy
+    version: 1.0.0
+    category: сеть
+    summary: WireGuard VPN с веб-панелью: клиенты заводятся в два клика, конфиг — по QR.
+    meta: '// 100 MB · 1 контейнер'
+    path: stacks/wg-easy
+

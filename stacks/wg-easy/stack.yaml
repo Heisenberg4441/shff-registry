@@ -1,0 +1,83 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: wg-easy
+name: wg-easy
+version: 1.0.0
+category: сеть
+summary: WireGuard VPN с веб-панелью: клиенты заводятся в два клика, конфиг — по QR.
+meta: '// 100 MB · 1 контейнер'
+homepage: https://wg-easy.github.io/wg-easy/
+
+description: |
+  Свой VPN в один клик: завёл клиента в веб-панели — получил qr-код
+  или файл конфига. Трафик пойдёт через домашнюю сеть, пока вы
+  в чужом wifi.
+
+  Для работы туннеля нужен проброшенный udp-порт на роутере —
+  номер виден ниже в настройках, пробросить его придётся руками.
+
+primary: wg-easy
+
+inputs:
+  - key: PORT
+    label: Порт веб-панели
+    type: port
+    default: 51821
+    hostPort: true
+    required: true
+
+  - key: WG_HOST
+    label: Публичный адрес сервера
+    type: string
+    required: true
+    hint: '// белый IP или домен, по которому vpn доступен из интернета'
+
+  - key: PASSWORD_HASH
+    label: Bcrypt-хэш пароля панели
+    type: secret
+    hint: '// хэш, не пароль: сгенерируйте командой docker run ghcr.io/wg-easy/wg-easy bcrypt'
+
+volumes:
+  - path: data/etc
+
+compose:
+  services:
+    wg-easy:
+      image: ghcr.io/wg-easy/wg-easy:latest
+      restart: unless-stopped
+      cap_add:
+        - NET_ADMIN
+        - SYS_MODULE
+      sysctls:
+        net.ipv4.ip_forward: 1
+        net.ipv4.conf.all.src_valid_mark: 1
+      ports:
+        - '${PORT}:51821/tcp'
+        - '51820:51820/udp'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/etc:/etc/wireguard
+      environment:
+        WG_HOST: ${WG_HOST}
+        PASSWORD_HASH: '${PASSWORD_HASH}'
+        WG_PORT: '51820'
+        WG_DEFAULT_ADDRESS: 10.8.0.x
+        WG_DEFAULT_DNS: 1.1.1.1
+        WG_MTU: '1420'
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Не забудьте пробросить на роутере udp-порт 51820 наружу, иначе
+    клиенты не подключатся.
+
+    В веб-панели: New client → имя → Create. Конфиг скачивается
+    файлом или показывается qr-кодом для телефона.
