@@ -322,3 +322,11 @@ stacks:
     meta: '// 150 MB · 1 контейнер'
     path: stacks/portainer
 
+  - id: netdata
+    name: netdata
+    version: 1.0.0
+    category: мониторинг
+    summary: Метрики хоста в реальном времени: cpu, память, диски, сеть, контейнеры.
+    meta: '// 200 MB · 1 контейнер'
+    path: stacks/netdata
+

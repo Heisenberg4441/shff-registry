@@ -1,0 +1,65 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: netdata
+name: netdata
+version: 1.0.0
+category: мониторинг
+summary: Метрики хоста в реальном времени: cpu, память, диски, сеть, контейнеры.
+meta: '// 200 MB · 1 контейнер'
+homepage: https://www.netdata.cloud
+
+description: |
+  Тысячи метрик хоста с секундным разрешением и готовыми дашбордами
+  без настройки. Видит и контейнеры, и железо, и сетевые интерфейсы.
+
+  Чтобы видеть контейнеры и хост, просит docker-сокет и доступ к
+  /proc и /sys хоста — это осознанная замена htop по всему серверу.
+
+primary: netdata
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 19999
+    hostPort: true
+    required: true
+
+volumes:
+  - path: data/config
+  - path: data/lib
+
+compose:
+  services:
+    netdata:
+      image: netdata/netdata:latest
+      restart: unless-stopped
+      pid: host
+      ports:
+        - '${PORT}:19999'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/config:/etc/netdata
+        - ${DOCK_STACK_DIR}/data/lib:/var/lib/netdata
+        - /var/run/docker.sock:/var/run/docker.sock:ro
+        - /proc:/host/proc:ro
+        - /sys:/host/sys:ro
+        - /etc/os-release:/host/etc/os-release:ro
+      environment:
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Без пароля — держите внутри своей сети или закройте проксией
+    с авторизацией.
+
+    Дашборд хоста открывается сразу; вкладка «Docker containers» покажет
+    соседние контейнеры.
