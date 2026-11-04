@@ -306,3 +306,11 @@ stacks:
     meta: '// 300 MB · 1 контейнер'
     path: stacks/changedetection
 
+  - id: homepage
+    name: homepage
+    version: 1.0.0
+    category: инструменты
+    summary: Дашборд со ссылками на все свои сервисы: статусы, виджеты, поиск.
+    meta: '// 150 MB · 1 контейнер'
+    path: stacks/homepage
+
