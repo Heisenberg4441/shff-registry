@@ -1,0 +1,62 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: beszel
+name: beszel
+version: 1.0.0
+category: мониторинг
+summary: Лёгкий мониторинг хостов: метрики, алерты, история без танцев с prometheus.
+meta: '// 50 MB · 1 контейнер'
+homepage: https://beszel.dev
+
+description: |
+  Минималистичная альтернатива стеку prometheus+grafana: сам собирает
+  метрики системы, рисует графики и умеет слать уведомления при
+  превышении порогов.
+
+  Хаб (этот сервис) — центр, к которому позже можно подключить агентов
+  на другие машины.
+
+primary: beszel
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8291
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: beszel
+
+volumes:
+  - path: data/data
+
+compose:
+  services:
+    beszel:
+      image: henrygd/beszel:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:8090'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/data:/beszel_data
+      environment:
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Хаб создаст аккаунт администратора при первом входе. Сам себя
+    в мониторинг он добавляет: после первого логина откроется
+    мастер добавления системы.

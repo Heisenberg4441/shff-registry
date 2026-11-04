@@ -330,3 +330,11 @@ stacks:
     meta: '// 200 MB · 1 контейнер'
     path: stacks/netdata
 
+  - id: beszel
+    name: beszel
+    version: 1.0.0
+    category: мониторинг
+    summary: Лёгкий мониторинг хостов: метрики, алерты, история без танцев с prometheus.
+    meta: '// 50 MB · 1 контейнер'
+    path: stacks/beszel
+
