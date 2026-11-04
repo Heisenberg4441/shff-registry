@@ -338,3 +338,11 @@ stacks:
     meta: '// 50 MB · 1 контейнер'
     path: stacks/beszel
 
+  - id: scrutiny
+    name: scrutiny
+    version: 1.0.0
+    category: мониторинг
+    summary: Здоровье дисков: SMART-атрибуты, температура, бэд-сектора.
+    meta: '// 200 MB · 1 контейнер'
+    path: stacks/scrutiny
+

@@ -1,0 +1,63 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: scrutiny
+name: scrutiny
+version: 1.0.0
+category: мониторинг
+summary: Здоровье дисков: SMART-атрибуты, температура, бэд-сектора.
+meta: '// 200 MB · 1 контейнер'
+homepage: https://github.com/AnalogJ/scrutiny
+
+description: |
+  Следит за всеми дисками хоста: температура, отработанные часы,
+  relocated-сектора, оценка здоровья. Дашборд показывает, какой диск
+  просится на замену.
+
+  Чтобы читать SMART, просит доступ к устройствам и udev хоста —
+  это осознанная замена smartctl по расписанию.
+
+primary: scrutiny
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8292
+    hostPort: true
+    required: true
+
+volumes:
+  - path: data/config
+  - path: data/influxdb
+
+compose:
+  services:
+    scrutiny:
+      image: ghcr.io/analogj/scrutiny:master-omnibus
+      restart: unless-stopped
+      cap_add:
+        - SYS_RAWIO
+        - SYS_ADMIN
+      ports:
+        - '${PORT}:8080'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/config:/opt/scrutiny/config
+        - ${DOCK_STACK_DIR}/data/influxdb:/opt/scrutiny/influxdb
+        - /run/udev:/run/udev:ro
+      environment:
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Первый сбор SMART пройдёт в течение нескольких минут после старта.
+    Диски без SMART (некоторые raid-контроллеры) подцепятся частично —
+    это ограничение smartctl, не скрининга.
