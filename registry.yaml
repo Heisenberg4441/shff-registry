@@ -370,3 +370,11 @@ stacks:
     meta: '// 100 MB · 1 контейнер'
     path: stacks/wg-easy
 
+  - id: npm
+    name: nginx-proxy-manager
+    version: 1.0.0
+    category: сеть
+    summary: Реверс-прокси с веб-панелью: хосты, сертификаты let's encrypt без конфигов.
+    meta: '// 300 MB · 1 контейнер'
+    path: stacks/npm
+
