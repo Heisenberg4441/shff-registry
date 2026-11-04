@@ -154,3 +154,11 @@ stacks:
     meta: '// 150 MB · 1 контейнер'
     path: stacks/audiobookshelf
 
+  - id: calibre-web
+    name: calibre-web
+    version: 1.0.0
+    category: книги
+    summary: Библиотека книг с читалкой в браузере и выгрузкой на электронную книгу.
+    meta: '// 250 MB · 1 контейнер'
+    path: stacks/calibre-web
+
