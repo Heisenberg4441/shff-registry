@@ -1,0 +1,152 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: nextcloud
+name: nextcloud
+version: 1.0.0
+category: данные
+summary: Своё облако для файлов, календаря и контактов, с клиентами для компьютера и телефона. Приезжает с postgres, redis и фоновыми задачами.
+meta: '// 650 MB · 4 контейнера'
+homepage: https://nextcloud.com
+
+description: |
+  База и redis живут в отдельной сети стека: снаружи их не видно, а имена
+  сервисов не пересекаются с базами соседних стеков в общей сети.
+
+  Файлы лежат в data/nextcloud/data внутри каталога стека. Адрес сервера
+  записывается в настройки только при первой установке.
+
+requires:
+  memoryMiB: 2048
+
+primary: nextcloud
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8020
+    hostPort: true
+    required: true
+
+  - key: SERVER_ADDRESS
+    label: Адрес сервера
+    type: string
+    required: true
+    pattern: '[A-Za-z0-9.:\[\]-]+'
+    hint: '// IP или имя без порта, по которому будешь открывать nextcloud'
+
+  - key: ADMIN_USER
+    label: Логин администратора
+    type: string
+    default: admin
+
+  - key: ADMIN_PASSWORD
+    label: Пароль администратора
+    type: secret
+    generate: password
+
+  - key: DB_PASSWORD
+    label: Пароль базы
+    type: secret
+    generate: password
+    hint: '// нужен только контейнерам стека'
+
+volumes:
+  - path: data/nextcloud
+    owner: '33:33'
+  - path: data/pgdata
+  - path: data/redis
+
+compose:
+  services:
+    nextcloud-redis:
+      image: redis:7-alpine
+      restart: unless-stopped
+      networks:
+        - backend
+      volumes:
+        - ${DOCK_STACK_DIR}/data/redis:/data
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+
+    nextcloud-db:
+      image: postgres:17-alpine
+      restart: unless-stopped
+      networks:
+        - backend
+      volumes:
+        - ${DOCK_STACK_DIR}/data/pgdata:/var/lib/postgresql/data
+      environment:
+        POSTGRES_DB: nextcloud
+        POSTGRES_USER: nextcloud
+        POSTGRES_PASSWORD: ${DB_PASSWORD}
+      healthcheck:
+        test: ['CMD-SHELL', 'pg_isready -U nextcloud -d nextcloud']
+        interval: 5s
+        timeout: 5s
+        retries: 20
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+
+    nextcloud:
+      image: nextcloud:35.0.2-apache
+      restart: unless-stopped
+      depends_on:
+        nextcloud-db:
+          condition: service_healthy
+        nextcloud-redis:
+          condition: service_started
+      networks:
+        - default
+        - backend
+      ports:
+        - '${PORT}:80'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/nextcloud:/var/www/html
+      environment:
+        POSTGRES_HOST: nextcloud-db
+        POSTGRES_DB: nextcloud
+        POSTGRES_USER: nextcloud
+        POSTGRES_PASSWORD: ${DB_PASSWORD}
+        REDIS_HOST: nextcloud-redis
+        NEXTCLOUD_ADMIN_USER: ${ADMIN_USER}
+        NEXTCLOUD_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+        NEXTCLOUD_TRUSTED_DOMAINS: ${SERVER_ADDRESS} ${DOCK_HOSTNAME}
+        PHP_UPLOAD_LIMIT: 16G
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+
+    nextcloud-cron:
+      image: nextcloud:35.0.2-apache
+      restart: unless-stopped
+      entrypoint: /cron.sh
+      depends_on:
+        - nextcloud
+      networks:
+        - backend
+      volumes:
+        - ${DOCK_STACK_DIR}/data/nextcloud:/var/www/html
+      environment:
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+    backend: {}
+
+post:
+  url: 'http://${SERVER_ADDRESS}:${PORT}'
+  notes: |
+    Логин: ${ADMIN_USER}
+    Пароль: ${ADMIN_PASSWORD}
+
+    Первый запуск занимает пару минут: nextcloud разворачивается и создаёт
+    базу. Пока идёт установка, страница может не открываться.
+
+    Адрес позже добавляется через occ config:system:set trusted_domains.

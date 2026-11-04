@@ -122,3 +122,11 @@ stacks:
     summary: 'Википедия и другие сайты офлайн из ZIM-файлов. Нужный файл скачивается при установке.'
     meta: '// 2 контейнера · ZIM-файл отдельно'
     path: stacks/kiwix
+
+  - id: nextcloud
+    name: nextcloud
+    version: 1.0.0
+    category: данные
+    summary: Своё облако для файлов, календаря и контактов, с клиентами для компьютера и телефона. Приезжает с postgres, redis и фоновыми задачами.
+    meta: '// 650 MB · 4 контейнера'
+    path: stacks/nextcloud
