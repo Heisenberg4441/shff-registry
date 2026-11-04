@@ -1,0 +1,62 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: node-red
+name: node-red
+version: 1.0.0
+category: автоматизация
+summary: Визуальные потоки: события → действия, собирается из нод на холсте.
+meta: '// 300 MB · 1 контейнер'
+homepage: https://nodered.org
+
+description: |
+  Классика автоматизаций: ноды на холсте соединяются проводами —
+  «http-запрос пришёл → преобразовать → записать в файл → ответить».
+  Тысячи готовых нод в каталоге.
+
+  Потоки хранятся в json внутри каталога стека — удобно бэкапить.
+
+primary: node-red
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 1880
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: nodes
+
+volumes:
+  - path: data/data
+    owner: '1000:1000'
+
+compose:
+  services:
+    node-red:
+      image: nodered/node-red:latest
+      restart: unless-stopped
+      user: '${DOCK_PUID}:${DOCK_PGID}'
+      ports:
+        - '${PORT}:1880'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/data:/data
+      environment:
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Редактор открывается сразу. Потоки сохраняются кнопкой Deploy.
+    Дополнительные ноды ставятся из меню → Manage palette.

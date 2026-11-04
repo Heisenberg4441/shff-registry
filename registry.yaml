@@ -290,3 +290,11 @@ stacks:
     meta: '// 500 MB · 1 контейнер'
     path: stacks/n8n
 
+  - id: node-red
+    name: node-red
+    version: 1.0.0
+    category: автоматизация
+    summary: Визуальные потоки: события → действия, собирается из нод на холсте.
+    meta: '// 300 MB · 1 контейнер'
+    path: stacks/node-red
+
