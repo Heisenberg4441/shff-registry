@@ -402,3 +402,11 @@ stacks:
     meta: '// 300 MB · 1 контейнер'
     path: stacks/duplicati
 
+  - id: mealie
+    name: mealie
+    version: 1.0.0
+    category: личное
+    summary: Рецепты с импортом со сторонних сайтов и планом питания на неделю.
+    meta: '// 500 MB · 1 контейнер'
+    path: stacks/mealie
+

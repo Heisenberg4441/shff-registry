@@ -1,0 +1,72 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: mealie
+name: mealie
+version: 1.0.0
+category: личное
+summary: Рецепты с импортом со сторонних сайтов и планом питания на неделю.
+meta: '// 500 MB · 1 контейнер'
+homepage: https://mealie.io
+
+description: |
+  Кулинарная книга: сохраняешь ссылку на рецепт — mealie вытаскивает
+  ингредиенты и шаги, режет рекламу. Плюс планировщик меню и список
+  покупок.
+
+  Регистрация новых пользователей закрыта, вход только за администратора.
+
+primary: mealie
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8293
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: recipes
+
+  - key: BASE_URL
+    label: По какому адресу открываешь mealie
+    type: string
+    required: true
+    hint: '// IP или имя без порта, например http://192.168.1.10'
+    default: ''
+
+volumes:
+  - path: data/data
+
+compose:
+  services:
+    mealie:
+      image: ghcr.io/mealie-recipes/mealie:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:9000'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/data:/app/data
+      environment:
+        ALLOW_SIGNUP: 'false'
+        BASE_URL: ${BASE_URL}
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Логин по умолчанию: changeme@example.com / MyPassword — смените
+    сразу в настройках профиля.
+
+    Рецепты добавляются кнопкой «Import»: вставляешь ссылку, mealie
+    сам вытащит ингредиенты и шаги.
