@@ -194,3 +194,11 @@ stacks:
     meta: '// 200 MB · 1 контейнер'
     path: stacks/prowlarr
 
+  - id: bazarr
+    name: bazarr
+    version: 1.0.0
+    category: медиа
+    summary: Докачивает субтитры к фильмам и сериалам из того, что уже скачано.
+    meta: '// 300 MB · 1 контейнер'
+    path: stacks/bazarr
+

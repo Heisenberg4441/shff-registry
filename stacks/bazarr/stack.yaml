@@ -1,0 +1,73 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: bazarr
+name: bazarr
+version: 1.0.0
+category: медиа
+summary: Докачивает субтитры к фильмам и сериалам из того, что уже скачано.
+meta: '// 300 MB · 1 контейнер'
+homepage: https://www.bazarr.media
+
+description: |
+  Смотрит на библиотеку radarr и sonarr и подтягивает недостающие
+  субтитры на нужных языках. Работает в фоне, ничего не перекачивает.
+
+  Библиотека монтируется на чтение — bazarr только добавляет файлы
+  субтитров рядом с видео.
+
+primary: bazarr
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 6767
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: subs
+
+volumes:
+  - path: data/config
+
+  # Общая медиатека: не удаляется вместе со стеком.
+  - path: media/films
+    shared: true
+    owner: '1000:1000'
+  - path: media/shows
+    shared: true
+    owner: '1000:1000'
+
+compose:
+  services:
+    bazarr:
+      image: lscr.io/linuxserver/bazarr:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:6767'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/config:/config
+        - ${DOCK_MEDIA_DIR}/films:/movies
+        - ${DOCK_MEDIA_DIR}/shows:/tv
+      environment:
+        PUID: ${DOCK_PUID}
+        PGID: ${DOCK_PGID}
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    В настройках укажите radarr (http://radarr:7878) и sonarr
+    (http://sonarr:8989) — bazarr сам подтянет список разделов.
+    Языки субтитров задаются в Filters → Languages.
