@@ -1,0 +1,76 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: linkding
+name: linkding
+version: 1.0.0
+category: чтение
+summary: Закладки с тегами, поиском и импортом из браузера.
+meta: '// 200 MB · 1 контейнер'
+homepage: https://github.com/sissbruecker/linkding
+
+description: |
+  База ссылок с тегами и полнотекстовым поиском по сохранённым страницам.
+  Импортирует закладки из html-выгрузки браузера за минуту.
+
+  Администратор создаётся при установке — регистрация посторонних
+  закрыта.
+
+primary: linkding
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 8282
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: links
+
+  - key: ADMIN_USER
+    label: Логин администратора
+    type: string
+    default: admin
+
+  - key: ADMIN_PASSWORD
+    label: Пароль администратора
+    type: secret
+    generate: password
+
+volumes:
+  - path: data/data
+
+compose:
+  services:
+    linkding:
+      image: sissbruecker/linkding:latest
+      restart: unless-stopped
+      ports:
+        - '${PORT}:9090'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/data:/etc/linkding/data
+      environment:
+        LD_SUPERUSER_NAME: ${ADMIN_USER}
+        LD_SUPERUSER_PASSWORD: ${ADMIN_PASSWORD}
+        LD_DISABLE_URL_VALIDATION: 'true'
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Логин: ${ADMIN_USER}
+    Пароль: ${ADMIN_PASSWORD}
+
+    Импорт закладок: Настройки → Импорт → html-файл из браузера.
+    Расширение для браузера называется linkding extension.

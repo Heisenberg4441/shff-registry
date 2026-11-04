@@ -226,3 +226,11 @@ stacks:
     meta: '// 300 MB · 1 контейнер'
     path: stacks/wallabag
 
+  - id: linkding
+    name: linkding
+    version: 1.0.0
+    category: чтение
+    summary: Закладки с тегами, поиском и импортом из браузера.
+    meta: '// 200 MB · 1 контейнер'
+    path: stacks/linkding
+
