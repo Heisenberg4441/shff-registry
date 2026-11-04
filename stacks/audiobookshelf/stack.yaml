@@ -1,0 +1,74 @@
+apiVersion: dock/v1
+kind: Stack
+
+id: audiobookshelf
+name: audiobookshelf
+version: 1.0.0
+category: медиа
+summary: Аудиокниги и подкасты с прогрессом прослушивания и офлайн-кэшем в приложении.
+meta: '// 150 MB · 1 контейнер'
+homepage: https://www.audiobookshelf.org
+
+description: |
+  Сервер аудиокниг и подкастов. Приложение на телефоне помнит, где
+  остановились, качает книги офлайн и синхронизирует прогресс.
+
+  Библиотека лежит в общей медиатеке — /home/dock/media/audiobooks.
+  Кладите туда папками «автор/книга».
+
+primary: audiobookshelf
+
+inputs:
+  - key: PORT
+    label: Порт
+    type: port
+    default: 13378
+    hostPort: true
+    required: true
+
+  - key: DOMAIN
+    label: Поддомен
+    type: string
+    default: books
+
+volumes:
+  - path: data/config
+    owner: '1000:1000'
+  - path: data/metadata
+    owner: '1000:1000'
+
+  # Общая медиатека: не удаляется вместе со стеком.
+  - path: media/audiobooks
+    shared: true
+    owner: '1000:1000'
+
+compose:
+  services:
+    audiobookshelf:
+      image: ghcr.io/advplyr/audiobookshelf:latest
+      restart: unless-stopped
+      user: '${DOCK_PUID}:${DOCK_PGID}'
+      ports:
+        - '${PORT}:13378'
+      volumes:
+        - ${DOCK_STACK_DIR}/data/config:/config
+        - ${DOCK_STACK_DIR}/data/metadata:/metadata
+        - ${DOCK_MEDIA_DIR}/audiobooks:/audiobooks
+      environment:
+        TZ: ${DOCK_TZ}
+      labels:
+        dock.stack: ${DOCK_STACK_ID}
+        dock.role: primary
+  networks:
+    default:
+      name: ${DOCK_NETWORK}
+      external: true
+
+post:
+  url: 'http://${DOCK_HOSTNAME}:${PORT}'
+  notes: |
+    Первый зашедший становится администратором. Дальше: создайте библиотеку
+    на /audiobooks и поставьте приложение audiobookshelf на телефон.
+
+    Книги складывайте в ${DOCK_MEDIA_DIR}/audiobooks папками
+    «автор/название» — метаданные подтянутся сами.

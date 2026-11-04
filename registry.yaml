@@ -146,3 +146,11 @@ stacks:
     meta: '// 2 GB · 3 контейнера'
     path: stacks/immich
 
+  - id: audiobookshelf
+    name: audiobookshelf
+    version: 1.0.0
+    category: медиа
+    summary: Аудиокниги и подкасты с прогрессом прослушивания и офлайн-кэшем в приложении.
+    meta: '// 150 MB · 1 контейнер'
+    path: stacks/audiobookshelf
+
